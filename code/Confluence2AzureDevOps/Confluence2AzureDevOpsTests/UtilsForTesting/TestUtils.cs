@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace Confluence2AzureDevOpsTests.Utils
+namespace Confluence2AzureDevOpsTests.UtilsForTesting
 {
     public static class TestUtils
     {

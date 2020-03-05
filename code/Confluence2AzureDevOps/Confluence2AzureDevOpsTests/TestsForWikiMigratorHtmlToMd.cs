@@ -2,7 +2,7 @@ using NUnit.Framework;
 
 namespace Confluence2AzureDevOpsTests
 {
-    public class WikiMigratorHtmlToMdTests
+    public class TestsForWikiMigratorHtmlToMd
     {
         // private PagesApi _target;
         private string _localWikiSourceFolder;

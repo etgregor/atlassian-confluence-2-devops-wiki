@@ -1,8 +1,8 @@
 using System.IO;
 
-namespace Confluence2AzureDevOpsTests.Utils
+namespace Confluence2AzureDevOpsTests.UtilsForTesting
 {
-    public static class FileUtil
+    public static class TestFileUtil
     {
         private const string OUTPUT_DIRECTORY = "bin";
         

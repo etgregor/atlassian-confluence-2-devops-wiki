@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Confluence2AzureDevOps.DevOpsApiClient;
 using Confluence2AzureDevOps.Entities.WikiPages;
-using Confluence2AzureDevOpsTests.Utils;
+using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
 
-namespace Confluence2AzureDevOpsTests
+namespace Confluence2AzureDevOpsTests.TestsForDevOpsApiClients
 {
-    public class PagesApiTests
+    public class TestsForPagesApi
     {
         private PagesApi _target;
         
@@ -32,6 +32,9 @@ namespace Confluence2AzureDevOpsTests
             Assert.IsNotNull(wikiPage);
         }
         
+        /// <summary>
+        /// Create page 
+        /// </summary>
         [Test]
         public async Task CreateOrUpdatePage_Test()
         {
@@ -42,7 +45,7 @@ namespace Confluence2AzureDevOpsTests
 
             // page.Content = "Hello world!!";
             string fileContent =
-                FileUtil.ReadContentFromResource("Resources", "ExampleFile.md");
+                TestFileUtil.ReadContentFromResource("Resources", "ExampleFile.md");
             page.Content = fileContent;      
             
             DtWikiPage wikiPage = await _target.CreateOrUpdatePage(page);

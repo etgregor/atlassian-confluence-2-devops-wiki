@@ -1,11 +1,11 @@
 using System;
 using Confluence2AzureDevOps.Processor;
-using Confluence2AzureDevOpsTests.Utils;
+using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
 
-namespace Confluence2AzureDevOpsTests
+namespace Confluence2AzureDevOpsTests.TestsForProcessor
 {
-    public class Html2MdConverterTests
+    public class TestsForHtml2MdConverter
     {
         private Html2MdConverter _converter;
         

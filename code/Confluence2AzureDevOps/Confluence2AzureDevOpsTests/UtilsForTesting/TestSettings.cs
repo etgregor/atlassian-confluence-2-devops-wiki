@@ -1,4 +1,4 @@
-namespace Confluence2AzureDevOpsTests.Utils
+namespace Confluence2AzureDevOpsTests.UtilsForTesting
 {   
     /// <summary>
     /// Settings for azure devops
