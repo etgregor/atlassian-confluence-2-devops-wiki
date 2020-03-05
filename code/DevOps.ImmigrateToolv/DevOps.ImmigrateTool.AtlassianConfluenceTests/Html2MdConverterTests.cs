@@ -1,3 +1,4 @@
+using System;
 using DevOps.ImmigrateTool.AtlasianConfluenceTests.Utils;
 using DevOps.ImmigrateTool.AtlassianConfluence.DevOpsApiClient;
 using DevOps.ImmigrateTool.AtlassianConfluence.Processor;
@@ -21,8 +22,15 @@ namespace DevOps.ImmigrateTool.AtlasianConfluenceTests
         [Test]
         public void ConvertHtml2MdFilesTests()
         {
-            _converter.StartConvertion();
+            try
+            {
+                _converter.StartConvertion();
+                Assert.IsTrue(true);
+            }
+            catch (Exception e)
+            {
+                Assert.Fail(e.Message);
+            }
         }
-        
     }
 }

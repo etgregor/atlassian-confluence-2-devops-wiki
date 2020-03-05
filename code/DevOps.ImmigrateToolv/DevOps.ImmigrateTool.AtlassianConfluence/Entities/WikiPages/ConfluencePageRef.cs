@@ -8,6 +8,11 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Entities.WikiPages
     /// </summary>
     internal class ConfluencePageRef
     {
+        public ConfluencePageRef()
+        {
+            SubPages = new List<ConfluencePageRef>();
+        }
+        
         public string Title { get; set; }
 
         public string File { get; set; }

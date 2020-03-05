@@ -13,8 +13,10 @@
 .Net core
 
 ### Dependencies
-```
+``` js
+//nuget packages
 newtonsoft
+HtmlAgilityPack
 ```
 
 ### Test Patameters
