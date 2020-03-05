@@ -13,10 +13,14 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Entities.WikiPages
             SubPages = new List<ConfluencePageRef>();
         }
         
-        public string Title { get; set; }
+        public string HtmlTitle { get; set; }
 
-        public string File { get; set; }
+        public string HtmlLocalFileName { get; set; }
 
+        public string MarkdownTitle { get; set; }
+        
+        public string MarkdownLocalFileName { get; set; }
+        
         public List<ConfluencePageRef> SubPages { get; set; }
     }
 }

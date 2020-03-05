@@ -17,6 +17,32 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Utils
                 System.IO.Directory.CreateDirectory(path);
             }
         }
+
+        public static string GetPathIfFileExists(params string[] paths)
+        {
+            string filePath = System.IO.Path.Combine(paths);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                filePath = string.Empty;
+            }
+
+            return filePath;
+        }
+        
+        public static string ReadFileContent(params string[] paths)
+        {
+            string filePath = System.IO.Path.Combine(paths);
+            string fileContent = string.Empty;
+            
+            if (System.IO.File.Exists(filePath))
+            {
+                string path = System.IO.Path.Combine(filePath);
+                fileContent = System.IO.File.ReadAllText(path);
+            }
+
+            return fileContent;
+        }
         
         public static void DeleteFile(string filePath)
         {

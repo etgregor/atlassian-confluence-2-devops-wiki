@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using DevOps.ImmigrateTool.AtlassianConfluence.Base.CustomExceptions;
 using DevOps.ImmigrateTool.AtlassianConfluence.Entities.WikiPages;
 using DevOps.ImmigrateTool.AtlassianConfluence.Utils;
@@ -34,11 +30,13 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Processor
 
         public void StartConvertion()
         {
-            ConfluencePageRef pageRef = ReadIndexOfPages();
+            ConfluencePageRef wikiMenu = ReadIndexOfPages();
             string jsonFile = Path.Combine(_mdDestinationFolder, "jsonIndex.json");
-            IoUtils.SaveObjectToFile(jsonFile, pageRef);
+            IoUtils.SaveObjectToFile(jsonFile, wikiMenu);
 
             System.Diagnostics.Debug.WriteLine($"Write file {jsonFile}");
+
+            ConvertHtml2Markdown(wikiMenu);
         }
 
         private ConfluencePageRef ReadIndexOfPages()
@@ -77,6 +75,53 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Processor
             return mainPage;
         }
 
+        private void ConvertHtml2Markdown(ConfluencePageRef siteIndex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Start conversion file: {siteIndex.HtmlLocalFileName}");
+            string markdownFileName = ConvertFile(siteIndex.HtmlLocalFileName);
+
+            if (!string.IsNullOrEmpty(markdownFileName))
+            {
+                System.Diagnostics.Debug.WriteLine($"New file created: {markdownFileName}");
+                
+                siteIndex.MarkdownLocalFileName = markdownFileName;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"WARN: Failed convertion file: {siteIndex.HtmlLocalFileName}");
+            }
+
+            foreach (ConfluencePageRef subPage in siteIndex.SubPages)
+            {
+                ConvertHtml2Markdown(subPage);
+            }
+        }
+
+        private string ConvertFile(string htmlFileName)
+        {
+            string markdownFileName = string.Empty;
+
+            var filePath = IoUtils.GetPathIfFileExists(_htmlSourceFolder, htmlFileName);
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                string htmlFileContent = IoUtils.ReadFileContent(filePath);
+                
+                var converter = new ReverseMarkdown.Converter();
+
+                string result = converter.Convert(htmlFileContent);
+
+                markdownFileName = string.Format("{0}.md", Path.GetFileNameWithoutExtension(htmlFileName));
+                
+                string fileDestinyFullPath = System.IO.Path.Combine(_mdDestinationFolder, markdownFileName);
+                
+                IoUtils.SaveFile(fileDestinyFullPath, result);
+            }
+
+            return markdownFileName;
+        }
+        
+        
         private void GetPageInfo(ref ConfluencePageRef confluencePageRef, HtmlNode bodyNode )
         {
             ConfluencePageRef lastPage = null;
@@ -96,16 +141,16 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Processor
                             if (confluencePageRef == null)
                             {
                                 confluencePageRef = new ConfluencePageRef();
-                                confluencePageRef.Title = value;
-                                confluencePageRef.File = fileName;
+                                confluencePageRef.HtmlTitle = value;
+                                confluencePageRef.HtmlLocalFileName = fileName;
 
                                 lastPage = confluencePageRef;
                             }
                             else
                             {
                                 lastPage = new ConfluencePageRef();
-                                lastPage.Title = value;
-                                lastPage.File = fileName;
+                                lastPage.HtmlTitle = value;
+                                lastPage.HtmlLocalFileName = fileName;
 
                                 confluencePageRef.SubPages.Add(lastPage);
                             }
