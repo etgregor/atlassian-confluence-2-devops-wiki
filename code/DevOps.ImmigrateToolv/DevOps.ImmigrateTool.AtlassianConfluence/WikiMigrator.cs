@@ -5,9 +5,6 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence
     /// </summary>
     public class WikiMigrator
     {
-        public WikiMigrator(string htmlFilesFolder)
-        {
-            
-        }
+        
     }
 }

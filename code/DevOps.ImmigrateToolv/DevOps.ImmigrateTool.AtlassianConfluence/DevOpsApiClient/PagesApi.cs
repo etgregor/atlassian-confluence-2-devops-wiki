@@ -23,17 +23,17 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.DevOpsApiClient
         /// Gets metadata or content of the wiki page for the provided path. Content negotiation is done based on the Accept header sent in the request.
         /// <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/get%20page?view=azure-devops-rest-5.1"/>
         /// </summary>
-        /// <returns>Returns <see cref="WikiPage"/></returns>
+        /// <returns>Returns <see cref="DtWikiPage"/></returns>
         /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
         /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
         /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
         /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
-        public async Task<WikiPage> GetFullTree()
+        public async Task<DtWikiPage> GetFullTree()
         {
             var queryString = new Dictionary<string, string>();
             queryString.Add("recursionLevel", "full");
 
-            WikiPage page = await ApiGet<WikiPage>(
+            DtWikiPage page = await ApiGet<DtWikiPage>(
                 UrlBase,
                 querystring:
                 queryString, clientConfig: _servConfig);
@@ -46,12 +46,12 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.DevOpsApiClient
         /// <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/create%20or%20update?view=azure-devops-rest-5.1"/>
         /// </summary>
         /// <param name="pageInfo">Page creation info.</param>
-        /// <returns>Return resent create <see cref="WikiPage"/></returns>
+        /// <returns>Return resent create <see cref="DtWikiPage"/></returns>
         /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
         /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
         /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
         /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
-        public async Task<WikiPage> CreateOrUpdatePage(PageWikiCreateOptions pageInfo)
+        public async Task<DtWikiPage> CreateOrUpdatePage(PageWikiCreateOptions pageInfo)
         {
             var pageContent = new {content = pageInfo.Content};
             
@@ -67,7 +67,7 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.DevOpsApiClient
                 queryString.Add("comment", pageInfo.Comment);
             }
 
-            WikiPage page = await ApiPut<WikiPage>(
+            DtWikiPage page = await ApiPut<DtWikiPage>(
                 UrlBase, 
                 pageContent, 
                 queryString: queryString,

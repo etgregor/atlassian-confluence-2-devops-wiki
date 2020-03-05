@@ -6,7 +6,7 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Entities.WikiPages
     /// Defines a page in a wiki.
     /// See more <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/get%20page?view=azure-devops-rest-5.1#wikipage">here</see>.
     /// </summary>
-    public class WikiPage
+    public abstract class DtWikiPage
     {
         /// <summary>
         /// Content of the wiki page.
@@ -51,7 +51,7 @@ namespace DevOps.ImmigrateTool.AtlassianConfluence.Entities.WikiPages
         /// <summary>
         /// List of subpages of the current page.
         /// </summary>
-        public List<WikiPage> subPages { get; set; }
+        public List<DtWikiPage> subPages { get; set; }
 
         /// <summary>
         /// REST url for this wiki page.
