@@ -1,5 +1,8 @@
 namespace Confluence2AzureDevOps.Base
 {
+    /// <summary>
+    /// Http client configuration
+    /// </summary>
     public class HttpClientConfig
     {
         /// <summary>
@@ -8,12 +11,12 @@ namespace Confluence2AzureDevOps.Base
         public int? SecondsTimeout { get; set; }
         
         /// <summary>
-        /// Authorization type
+        /// Authentication scheme <see cref="https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication"/>
         /// </summary>
         public string AuthorizationType { get; set; }
         
         /// <summary>
-        /// Authorization header value
+        /// value of "Autorization" header, exclude <see cref="AuthorizationType"/> value.
         /// </summary>
         public string AuthorizationValue { get; set; }
     }

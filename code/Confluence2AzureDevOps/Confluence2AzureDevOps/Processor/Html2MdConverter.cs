@@ -31,7 +31,9 @@ namespace Confluence2AzureDevOps.Processor
         public void StartConvertion()
         {
             ConfluencePageRef wikiMenu = ReadIndexOfPages();
+            
             string jsonFile = Path.Combine(_mdDestinationFolder, "jsonIndex.json");
+            
             IoUtils.SaveObjectToFile(jsonFile, wikiMenu);
 
             System.Diagnostics.Debug.WriteLine($"Write file {jsonFile}");

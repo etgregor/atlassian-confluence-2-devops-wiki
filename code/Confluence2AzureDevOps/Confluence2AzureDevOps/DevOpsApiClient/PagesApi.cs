@@ -6,17 +6,22 @@ using Confluence2AzureDevOps.Entities.WikiPages;
 
 namespace Confluence2AzureDevOps.DevOpsApiClient
 {
-    public class PagesApi : ApiClientBase
+    /// <summary>
+    /// Azure devops API
+    /// </summary>
+    public class PagesApi : DevOpsApiBase
     {
-        private readonly HttpClientConfig _servConfig;
-
-        public PagesApi(string organization, string project, string wikiIdentifier, string personalAccesToken)
-            : base(
-                $"https://dev.azure.com/{organization}/{project}/_apis/wiki/wikis/{wikiIdentifier}/pages?api-version=5.1")
+        /// <summary>
+        /// Initialize client whit PAT ( Personal Access Token)
+        /// </summary>
+        /// <param name="organization">The name of the Azure DevOps organization.</param>
+        /// <param name="project">Project ID or project name</param>
+        /// <param name="wikiIdentifier">Wiki Id or name.</param>
+        /// <param name="personalAccessToken">PAT (DevOps personal access token)</param>
+        /// <param name="apiVersion">Version of the API to use. This should be set to '5.1' to use this version of the api.</param>
+        public PagesApi(string organization, string project, string wikiIdentifier, string personalAccessToken, string apiVersion = "5.1")
+            : base(organization, project, wikiIdentifier, personalAccessToken, apiVersion)
         {
-            string patToken = System.Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(personalAccesToken + ":" + personalAccesToken));
-
-            _servConfig = new HttpClientConfig {AuthorizationType = "Basic", AuthorizationValue = patToken};
         }
 
         /// <summary>
@@ -31,16 +36,17 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
         public async Task<DtWikiPage> GetFullTree()
         {
             var queryString = new Dictionary<string, string>();
+            
             queryString.Add("recursionLevel", "full");
 
             DtWikiPage page = await ApiGet<DtWikiPage>(
                 UrlBase,
-                querystring:
-                queryString, clientConfig: _servConfig);
+                querystring: queryString,
+                httpClientConfig: HttpClientConfig);
 
             return page;
         }
-        
+
         /// <summary>
         /// Creates or edits a wiki page.
         /// <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/create%20or%20update?view=azure-devops-rest-5.1"/>
@@ -71,7 +77,7 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
                 UrlBase, 
                 pageContent, 
                 queryString: queryString,
-                clientConfig: _servConfig);
+                httpClientConfig: HttpClientConfig);
 
             return page;
         }

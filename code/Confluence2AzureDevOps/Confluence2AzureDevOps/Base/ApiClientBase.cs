@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 namespace Confluence2AzureDevOps.Base
 {
          /// <summary>
-         /// Componente base para implementar un cliente de acceso a la API de BeerML.
+         /// Http API client
          /// </summary>
          public abstract class ApiClientBase
          {
@@ -21,8 +21,6 @@ namespace Confluence2AzureDevOps.Base
              {
                  UrlBase = urlBase;
              }
-                 
-             private const string ID_HEADER_TOKEN = "Authorization";
              
              private const string APPLICATION_REQUEST_TYPE_JSON = "application/json";
      
@@ -37,17 +35,18 @@ namespace Confluence2AzureDevOps.Base
              #region - Post -
      
              /// <summary>
-             /// Hace una llamada Post a la API
+             /// Execute HTTP POST call
              /// </summary>
-             /// <param name="url">Url a donde se hace manda el post</param>
-             /// <param name="data">Datos que se envían en la llamada</param>
-             /// <param name="clientConfig"></param>
-             /// <typeparam name="T">Tipo de objeto esperado</typeparam>
-             /// <returns>Regresa instancas del tipo de objeto esperado</returns>
-             /// <exception cref="UnautorizeApiException">Cuando el token es inválido</exception>
-             /// <exception cref="ApiException">Cuando ocurren un error al mandar a llamar a la API</exception>
-             /// <exception cref="CallApiException"></exception>
-             protected async Task<T> ApiPost<T>(string url, object data, HttpClientConfig  clientConfig = null)
+             /// <param name="url">Api address</param>
+             /// <param name="data">Data to send (its will be transformed to JSON)</param>
+             /// <param name="httpClientConfig">Http client configuration</param>
+             /// <typeparam name="T">Expected returned Type</typeparam>
+             /// <returns>Return an instance of expected type <see cref="T"/> </returns>
+             /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
+             /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
+             /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
+             /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
+             protected async Task<T> ApiPost<T>(string url, object data, HttpClientConfig  httpClientConfig = null)
              {
                  T result;
      
@@ -55,7 +54,7 @@ namespace Confluence2AzureDevOps.Base
                  {
                      var dataAsJson = JsonConvert.SerializeObject(data);
      
-                     using (HttpClient client = CreateHttpClient(clientConfig))
+                     using (HttpClient client = CreateHttpClient(httpClientConfig))
                      {
                          StringContent stringContent =
                              new StringContent(dataAsJson, Encoding.UTF8, APPLICATION_REQUEST_TYPE_JSON);
@@ -87,18 +86,16 @@ namespace Confluence2AzureDevOps.Base
              }
              
              /// <summary>
-             /// Sube un archivo a un servicio rest
+             /// Upload an file with HTTP Post
              /// </summary>
-             /// <param name="url">Url a donde se hará el post</param>
-             /// <param name="fieldNameOfFileInForm">Nombre del parámetro que contiene el archivo</param>
-             /// <param name="filename">Nombre del archivo</param>
-             /// <param name="fileAsBites">Contenido del archivo en bites</param>
-             /// <param name="formFiels">Campos adicionales del formulario</param>
-             /// <param name="clientConfig">Rest client config</param>
-             /// <typeparam name="T">Tipo de dato esperado</typeparam>
-             /// <returns>instancia de <see cref="T"/></returns>
-             /// <exception cref="UnautorizeApiException">Cuando el token es inválido</exception>
-             /// <exception cref="ApiException">Cuando ocurren un error al mandar a llamar a la API</exception>
+             /// <param name="url"></param>
+             /// <param name="fieldNameOfFileInForm"></param>
+             /// <param name="filename"></param>
+             /// <param name="fileAsBites"></param>
+             /// <param name="formFiels"></param>
+             /// <param name="clientConfig"></param>
+             /// <typeparam name="T"></typeparam>
+             /// <returns></returns>
              /// <exception cref="CallApiException"></exception>
              protected async Task<T> PotFile<T>(string url, string fieldNameOfFileInForm, string filename, byte[] fileAsBites, Dictionary<string, string> formFiels = null, HttpClientConfig  clientConfig = null)
              {
@@ -160,7 +157,20 @@ namespace Confluence2AzureDevOps.Base
              
              #region - Put -
              
-             protected async Task<T> ApiPut<T>(string url, object data, Dictionary<string, string> queryString = null, HttpClientConfig  clientConfig = null)
+             /// <summary>
+             /// Execute HTTP POST call
+             /// </summary>
+             /// <param name="url">Api address</param>
+             /// <param name="data">Data to send (its will be transformed to JSON)</param>
+             /// <param name="queryString">Data to send into URL</param>
+             /// <param name="httpClientConfig">Http client configuration</param>
+             /// <typeparam name="T">Expected returned Type</typeparam>
+             /// <returns>Return instance of <see cref="T"/></returns>
+             /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
+             /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
+             /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
+             /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
+             protected async Task<T> ApiPut<T>(string url, object data, Dictionary<string, string> queryString = null, HttpClientConfig  httpClientConfig = null)
              {
                  T result;
      
@@ -170,7 +180,7 @@ namespace Confluence2AzureDevOps.Base
                      
                      var dataAsJson = JsonConvert.SerializeObject(data);
      
-                     using (HttpClient client = CreateHttpClient(clientConfig))
+                     using (HttpClient client = CreateHttpClient(httpClientConfig))
                      {
                          StringContent stringContent =
                              new StringContent(dataAsJson, Encoding.UTF8, APPLICATION_REQUEST_TYPE_JSON);
@@ -204,7 +214,16 @@ namespace Confluence2AzureDevOps.Base
              
              #region - Get -
              
-             protected async Task<T> ApiGet<T>(string url, Dictionary<string, string> querystring = null, HttpClientConfig  clientConfig = null)
+             /// <summary>
+             /// Execute HTTP POST call
+             /// </summary>
+             /// <param name="url">Api address</param>
+             /// <param name="querystring">Data to send (its will be transformed to JSON)</param>
+             /// <param name="httpClientConfig">Http client configuration</param>
+             /// <typeparam name="T">Expected returned Type</typeparam>
+             /// <returns>Return instance of <see cref="T"/></returns>
+             /// <exception cref="CallApiException"></exception>
+             protected async Task<T> ApiGet<T>(string url, Dictionary<string, string> querystring = null, HttpClientConfig  httpClientConfig = null)
              {
                  T result;
                      
@@ -212,7 +231,7 @@ namespace Confluence2AzureDevOps.Base
                  {
                      url = CreateUrlWithParameters(url, querystring);
                      
-                     using (HttpClient client = CreateHttpClient(clientConfig))
+                     using (HttpClient client = CreateHttpClient(httpClientConfig))
                      {
                          HttpResponseMessage requestResult = await client.GetAsync(url);
 

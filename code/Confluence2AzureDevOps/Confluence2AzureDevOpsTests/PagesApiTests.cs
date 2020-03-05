@@ -36,12 +36,11 @@ namespace Confluence2AzureDevOpsTests
         public async Task CreateOrUpdatePage_Test()
         {
             var page = new PageWikiCreateOptions();
-            page.Comment = string.Format($"Page created from unit test: {DateTime.Now}");
+            page.Comment = string.Format($"Page created from unit test: {DateTime.Now:dd-MMM-yy-HHmmss}");
 
-            page.Path = $"UT Sample {DateTime.Now.ToString("dd-MM-yy-HHmmss")}";
+            page.Path = $"UT Sample {DateTime.Now:dd-MM-yy-HHmmss}";
 
             // page.Content = "Hello world!!";
-            
             string fileContent =
                 FileUtil.ReadContentFromResource("Resources", "ExampleFile.md");
             page.Content = fileContent;      
