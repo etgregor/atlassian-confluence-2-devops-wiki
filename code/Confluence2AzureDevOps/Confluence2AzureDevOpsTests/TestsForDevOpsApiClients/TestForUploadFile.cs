@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Confluence2AzureDevOps.DevOpsApiClient;
+using Confluence2AzureDevOps.Entities.WikiPages;
 using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
 
@@ -27,14 +28,17 @@ namespace Confluence2AzureDevOpsTests.TestsForDevOpsApiClients
         [Test]
         public async Task UploadFileTest()
         {
-            var file =
-                "/Users/McGregor/Downloads/formiik/backup_confluence/wiki/FD-MD/attachments/832536597/832569372.png";
-
-            var fileContent = File.ReadAllBytes(file);
-
-            var wikiPage = await _target.UploadFile("TestFile1.png", fileContent);
+            string fileName = "diagram example 123.png";
+            
+            var fileContent = TestFileUtil.ReadFile("Resources", fileName);
+            
+            DtWikiAttachment wikiPage = await _target.UploadFile(fileName, fileContent);
             
             Assert.IsNotNull(wikiPage);
+
+            bool namesAreEquals = string.Equals(fileName, wikiPage.Name);
+            
+            Assert.True(namesAreEquals);
 
             Console.WriteLine(wikiPage);
         }

@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace Confluence2AzureDevOps.Entities.WikiPages
 {
     /// <summary>
@@ -9,11 +11,13 @@ namespace Confluence2AzureDevOps.Entities.WikiPages
         /// <summary>
         /// Name of the wiki attachment file.
         /// </summary>
-        public string name { get; set; }
+        [JsonProperty("name")]
+        public string Name { get; set; }
 
         /// <summary>
         /// Path of the wiki attachment file.
         /// </summary>
-        public string path { get; set; }
+        [JsonProperty("path")]
+        public string Path { get; set; }
     }
 }

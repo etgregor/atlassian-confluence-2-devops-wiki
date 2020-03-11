@@ -401,7 +401,15 @@ namespace Confluence2AzureDevOps.Base
                  {
                      exceptionResult = new UnautorizeApiException(ACCESS_DENIED);
                  }
+                 
                  if (statusCode == HttpStatusCode.BadRequest)
+                 {
+                     var operationResultDto = JsonConvert.DeserializeObject<ApiErrorResult>(responseContent);
+                     
+                     exceptionResult = new ApiInvalidInputDataException(operationResultDto.Message, operationResultDto);
+                 }
+                 
+                 if (statusCode == HttpStatusCode.InternalServerError)
                  {
                      var operationResultDto = JsonConvert.DeserializeObject<ApiErrorResult>(responseContent);
                      

@@ -13,6 +13,13 @@ namespace Confluence2AzureDevOpsTests.UtilsForTesting
             return fileContent;
         }
         
+        public static byte[] ReadFile(params string[] fileName)
+        {   
+            string path = Path.Combine(fileName);
+            var fileContent = File.ReadAllBytes(path);
+            return fileContent;
+        }
+        
         public static string WriteFile(string fileName, string fileContent)
         {
             string filename = Path.Combine("unit_test_output", fileName);
