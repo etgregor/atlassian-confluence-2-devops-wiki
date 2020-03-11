@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Confluence2AzureDevOps.Base.CustomExceptions;
-using Confluence2AzureDevOps.ObjectModel.WikiPages;
+using Confluence2AzureDevOps.ObjectModel;
 using Confluence2AzureDevOps.Utils;
 using HtmlAgilityPack;
 
@@ -19,16 +19,11 @@ namespace Confluence2AzureDevOps.Processor
         private readonly string _mdDestinationFolder;
 
         private string _indexFileFullPath;
-
-        /// <summary>
-        /// Json file with initial wiki structure.
-        /// </summary>
-        private const string CONFLUENCE_WIKI_INDEX_JSON_INITIAL_FILE = "InitialWikiIndex.json";
-        
+ 
         /// <summary>
         /// Json file with Markdown wiki structure.
         /// </summary>
-        private const string CONFLUENCE_WIKI_INDEX_JSON_MARKDOWN_INFO_FILE = "InitialWikiIndex_WithMarkdownInfo.json";
+        private const string CONFLUENCE_WIKI_INDEX_JSON_MARKDOWN_INFO_FILE = "_MigrationTreeInfo.json";
 
         /// <summary>
         /// Init converter
@@ -56,8 +51,6 @@ namespace Confluence2AzureDevOps.Processor
             ValidateInitialInput(confluenceIndexFile);
             
             ConfluencePageRef wikiMenu = ReadConfluenceIndexOfPages(selectorOfIndexControl);
-
-            WriteSampleJsonMenu(CONFLUENCE_WIKI_INDEX_JSON_INITIAL_FILE, wikiMenu);
 
             string nodePath = string.Empty;
             
@@ -185,6 +178,11 @@ namespace Confluence2AzureDevOps.Processor
             return localFileMarkdownName;
         }
         
+        /// <summary>
+        /// Get page info tree, href=File route, valule = title
+        /// </summary>
+        /// <param name="confluencePageRef"></param>
+        /// <param name="bodyNode"></param>
         private void GetPageInfoFromHtmlLinkElement(ref ConfluencePageRef confluencePageRef, HtmlNode bodyNode )
         {
             ConfluencePageRef lastPage = null;
@@ -201,7 +199,7 @@ namespace Confluence2AzureDevOps.Processor
 
                         if (!string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(pageTitle))
                         {
-                            pageTitle = CleanupTitle(pageTitle);
+                            pageTitle = CleanupFileTitle(pageTitle);
                             
                             if (confluencePageRef == null)
                             {
@@ -236,10 +234,11 @@ namespace Confluence2AzureDevOps.Processor
 
         /// <summary>
         /// Remove many empty spaces, and invalid chars for filename
+        /// <see cref="https://docs.microsoft.com/en-us/azure/devops/project/wiki/wiki-file-structure?view=azure-devops"/>
         /// </summary>
         /// <param name="title">original </param>
         /// <returns>Clean text</returns>
-        private string CleanupTitle(string title)
+        private string CleanupFileTitle(string title)
         {
             title = title.Replace("\n", " ");
             title = title.Replace("/", "-");

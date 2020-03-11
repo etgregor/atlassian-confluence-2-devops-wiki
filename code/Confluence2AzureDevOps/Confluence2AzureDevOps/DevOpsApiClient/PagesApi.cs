@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Confluence2AzureDevOps.Base;
 using Confluence2AzureDevOps.Base.CustomExceptions;
+using Confluence2AzureDevOps.ObjectModel;
 using Confluence2AzureDevOps.ObjectModel.WikiPages;
 
 namespace Confluence2AzureDevOps.DevOpsApiClient

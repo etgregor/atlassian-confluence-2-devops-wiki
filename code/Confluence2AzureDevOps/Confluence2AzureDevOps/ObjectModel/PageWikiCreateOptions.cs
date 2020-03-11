@@ -1,4 +1,4 @@
-namespace Confluence2AzureDevOps.ObjectModel.WikiPages
+namespace Confluence2AzureDevOps.ObjectModel
 {
     public class PageWikiCreateOptions
     {
