@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Confluence2AzureDevOps.Entities.WikiPages
+namespace Confluence2AzureDevOps.ObjectModel.WikiPages
 {
     /// <summary>
     /// References por create tree pages from index.html file.

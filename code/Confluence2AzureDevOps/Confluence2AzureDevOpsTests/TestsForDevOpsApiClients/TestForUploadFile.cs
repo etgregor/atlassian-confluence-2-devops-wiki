@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Confluence2AzureDevOps.DevOpsApiClient;
-using Confluence2AzureDevOps.Entities.WikiPages;
+using Confluence2AzureDevOps.ObjectModel.WikiPages;
 using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
 

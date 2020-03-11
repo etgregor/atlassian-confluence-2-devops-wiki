@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Confluence2AzureDevOps.Entities.WikiPages
+namespace Confluence2AzureDevOps.ObjectModel.WikiPages
 {
     /// <summary>
     /// Defines properties for wiki attachment file

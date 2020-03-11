@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Confluence2AzureDevOps.Base.CustomExceptions;
-using Confluence2AzureDevOps.Entities.WikiPages;
+using Confluence2AzureDevOps.ObjectModel.WikiPages;
 using Confluence2AzureDevOps.Utils;
 using HtmlAgilityPack;
 

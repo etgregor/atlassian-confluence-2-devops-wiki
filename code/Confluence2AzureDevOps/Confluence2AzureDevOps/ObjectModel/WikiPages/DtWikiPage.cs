@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
-namespace Confluence2AzureDevOps.Entities.WikiPages
+namespace Confluence2AzureDevOps.ObjectModel.WikiPages
 {
     /// <summary>
     /// Defines a page in a wiki.
@@ -11,51 +12,61 @@ namespace Confluence2AzureDevOps.Entities.WikiPages
         /// <summary>
         /// Content of the wiki page.
         /// </summary>
-        public string content { get; set; }
+        [JsonProperty("content")]
+        public string Content { get; set; }
 
         /// <summary>
         /// Path of the git item corresponding to the wiki page stored in the backing Git repository.
         /// </summary>
-        public string gitItemPath { get; set; }
+        [JsonProperty("GitItemPath")]
+        public string GitItemPath { get; set; }
 
         /// <summary>
         /// When present, permanent identifier for the wiki page
         /// </summary>
-        public int id { get; set; }
+        [JsonProperty("id")]
+        public int Id { get; set; }
 
         /// <summary>
         /// True if a page is non-conforming, i.e. 1) if the name doesn't match page naming standards. 2) if the page does not have a valid entry in the appropriate order file.
         /// </summary>
-        public bool isNonConformant { get; set; }
+        [JsonProperty("isNonConformant")]
+        public bool IsNonConformant { get; set; }
 
         /// <summary>
         /// True if this page has subpages under its path.
         /// </summary>
-        public bool isParentPage { get; set; }
+        [JsonProperty("isParentPage")]
+        public bool IsParentPage { get; set; }
 
         /// <summary>
         /// Order of the wiki page, relative to other pages in the same hierarchy level.
         /// </summary>
-        public int order { get; set; }
+        [JsonProperty("order")]
+        public int Order { get; set; }
 
         /// <summary>
         /// Path of the wiki page.
         /// </summary>
-        public string path { get; set; }
+        [JsonProperty("path")]
+        public string Path { get; set; }
 
         /// <summary>
         /// Remote web url to the wiki page.
         /// </summary>
-        public string remoteUrl { get; set; }
+        [JsonProperty("remoteUrl")]
+        public string RemoteUrl { get; set; }
 
         /// <summary>
         /// List of subpages of the current page.
         /// </summary>
-        public List<DtWikiPage> subPages { get; set; }
+        [JsonProperty("subPages")]
+        public List<DtWikiPage> SubPages { get; set; }
 
         /// <summary>
         /// REST url for this wiki page.
         /// </summary>
-        public string url { get; set; }
+        [JsonProperty("url")]
+        public string Url { get; set; }
     }
 }
