@@ -17,9 +17,21 @@ namespace Confluence2AzureDevOps.Entities.WikiPages
 
         public string HtmlLocalFileName { get; set; }
 
-        public string MarkdownTitle { get; set; }
+        /// <summary>
+        /// Name of file that result from conversion from Html to Markdown
+        /// </summary>
+        public string MarkdownLocalFilename { get; set; }
         
-        public string MarkdownLocalFileName { get; set; }
+        /// <summary>
+        /// Markdown local filename
+        /// </summary>
+        public string PageTitleAtAzureDevOps { get; set; }
+        
+        /// <summary>
+        /// Property for 'wiki.path' on wiki Azure DevOps API
+        /// <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/get%20page?view=azure-devops-rest-5.1#wikipage"/>
+        /// </summary>
+        public string PagePathAtAzureDevOps { get; set; }
         
         public List<ConfluencePageRef> SubPages { get; set; }
     }

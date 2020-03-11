@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Confluence2AzureDevOps.Base.CustomExceptions;
 using Newtonsoft.Json;
 
@@ -5,19 +7,37 @@ namespace Confluence2AzureDevOps.Utils
 {
     internal static class IoUtils
     {
-        public static void CreateFolderPath(string path)
+        public static void CreateFolderPath(string path, bool backupIfExists = true)
         {
             if (string.IsNullOrEmpty(path))
             {
-                throw new GenericException("Can't create empty directory");
+                throw new GenericC2AException("Can't create empty directory");
             }
             
-            if (!System.IO.Directory.Exists(path))
+            if (Directory.Exists(path))
             {
-                System.IO.Directory.CreateDirectory(path);
+                DirectoryInfo dirInfo = new DirectoryInfo(path);
+
+                if (dirInfo.Parent == null)
+                {
+                    throw new GenericC2AException($"Directory cant be root, please provide subdirectory path {path}");
+                }
+
+                System.Diagnostics.Trace.TraceInformation($"Create backup directory '{dirInfo.Name}'");
+                
+                string backupName = $"{dirInfo.Name}_Backup_{DateTime.Now:ddMMMyyHHmmss}";
+                
+                dirInfo.MoveTo(Path.Combine(dirInfo.Parent.FullName, backupName));
             }
+            
+            Directory.CreateDirectory(path);
         }
 
+        /// <summary>
+        /// Get full file path if file exists
+        /// </summary>
+        /// <param name="paths">Parts of path. i.e: ("root", "doc", "file1.txt")</param>
+        /// <returns>Ful file path</returns>
         public static string GetPathIfFileExists(params string[] paths)
         {
             string filePath = System.IO.Path.Combine(paths);
@@ -48,7 +68,7 @@ namespace Confluence2AzureDevOps.Utils
         {
             if (string.IsNullOrEmpty(filePath))
             {
-                throw new GenericException("Can't create empty directory");
+                throw new GenericC2AException("Can't create empty directory");
             }
             
             if (System.IO.File.Exists(filePath))

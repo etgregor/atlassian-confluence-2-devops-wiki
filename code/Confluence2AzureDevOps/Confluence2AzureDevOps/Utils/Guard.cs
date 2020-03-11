@@ -8,7 +8,7 @@ namespace Confluence2AzureDevOps.Utils
         {
             if (string.IsNullOrEmpty(value))
             {
-                throw new GenericException($" Require value for: {name}");
+                throw new GenericC2AException($" Require value for: {name}");
             }
         }
 
@@ -16,7 +16,7 @@ namespace Confluence2AzureDevOps.Utils
         {
             if (!System.IO.Directory.Exists(path))
             {
-                throw new GenericException($" Directory not exists: {path}");
+                throw new GenericC2AException($" Directory not exists: {path}");
             }
         }
     }

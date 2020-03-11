@@ -17,10 +17,12 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
         /// <param name="wikiIdentifier">Wiki Id or name.</param>
         /// <param name="personalAccessToken">PAT (DevOps personal access token)</param>
         /// <param name="apiVersion">Version of the API to use. This should be set to '5.1' to use this version of the api.</param>
-        protected DevOpsApiBase(string organization, string project, string wikiIdentifier, string personalAccessToken, string apiVersion)
+        protected DevOpsApiBase(string organization, string project, string wikiIdentifier, string personalAccessToken, string apiName, string apiVersion)
             : base(
-                $"https://dev.azure.com/{organization}/{project}/_apis/wiki/wikis/{wikiIdentifier}/pages?api-version={apiVersion}")
+                $"https://dev.azure.com/{organization}/{project}/_apis/wiki/wikis/{wikiIdentifier}/{apiName}?api-version={apiVersion}")
         {
+            
+            //PUT https://dev.azure.com/{organization}/{project}/_apis/wiki/wikis/{wikiIdentifier}/attachments?name={name}&api-version=5.1
             string patToken = System.Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1")
                 .GetBytes(personalAccessToken + ":" + personalAccessToken));
 

@@ -12,7 +12,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
         [SetUp]
         public void Setup()
         {
-            // Check internal code for test init.
+            // Init test values.
             LocalSettingTests setting = TestUtils.GetLocalSettings();
 
             _converter = new Html2MdConverter(setting.LocalWikiSourceFolder, setting.LocalWikiDestinatioFolder);
@@ -22,7 +22,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
         public void ConvertHtml2MdFilesTests()
         {
             try
-            {
+            {    
                 _converter.StartConvertion();
                 Assert.IsTrue(true);
             }

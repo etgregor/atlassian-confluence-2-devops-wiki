@@ -5,17 +5,17 @@ namespace Confluence2AzureDevOps.Base.CustomExceptions
     /// <summary>
     /// Processing exception
     /// </summary>
-    public class GenericException : InvalidOperationException
+    public class GenericC2AException : InvalidOperationException
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="message"></param>
-        public GenericException(string message) : base(message)
+        public GenericC2AException(string message) : base(message)
         {
         }
 
-        public GenericException(string message, Exception ex) : base(message, ex)
+        public GenericC2AException(string message, Exception ex) : base(message, ex)
         {
         }
     }

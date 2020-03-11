@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -15,38 +16,39 @@ namespace Confluence2AzureDevOps.Base
          /// </summary>
          public abstract class ApiClientBase
          {
+             private const string APPLICATION_REQUEST_TYPE_JSON = "application/json";
+     
+             private const string UNKNOWN_API_EXCEPTION = "API calling: Internal error";
+     
+             private const string ACCESS_DENIED = "Access denied";
+             
+             private const string MISSING_ACCESS_TOKEN = "Missing Authorization Header";
+             
+             private const string DESERIALIZE_EXCEPTION = "Deserialize exception, cannot interpretation api response";
+             
              protected string UrlBase { get; }
 
              protected ApiClientBase(string urlBase)
              {
                  UrlBase = urlBase;
              }
-             
-             private const string APPLICATION_REQUEST_TYPE_JSON = "application/json";
-     
-             private const string UNKNOW_API_EXCEPTION = "API calling: Internal error";
-     
-             protected const string ACCESS_DENIED = "Access denied";
-             
-             protected const string MISSING_ACCES_TOKEN = "Missing Authorization Header";
-             
-             private const string DESERIALIZ_EXCEPTION = "Deserialize exception, cannot interpretation api response";
-     
+            
              #region - Post -
-     
+
              /// <summary>
              /// Execute HTTP POST call
              /// </summary>
              /// <param name="url">Api address</param>
              /// <param name="data">Data to send (its will be transformed to JSON)</param>
              /// <param name="httpClientConfig">Http client configuration</param>
+             /// <param name="applicationType">Application Type</param>
              /// <typeparam name="T">Expected returned Type</typeparam>
              /// <returns>Return an instance of expected type <see cref="T"/> </returns>
              /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
              /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
              /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
              /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
-             protected async Task<T> ApiPost<T>(string url, object data, HttpClientConfig  httpClientConfig = null)
+             protected async Task<T> ApiPost<T>(string url, object data, HttpClientConfig  httpClientConfig = null, string applicationType = "application/json")
              {
                  T result;
      
@@ -57,7 +59,7 @@ namespace Confluence2AzureDevOps.Base
                      using (HttpClient client = CreateHttpClient(httpClientConfig))
                      {
                          StringContent stringContent =
-                             new StringContent(dataAsJson, Encoding.UTF8, APPLICATION_REQUEST_TYPE_JSON);
+                             new StringContent(dataAsJson, Encoding.UTF8, applicationType);
      
                          HttpResponseMessage requestResult = await client.PostAsync(url, stringContent);
      
@@ -78,59 +80,58 @@ namespace Confluence2AzureDevOps.Base
                  }
                  catch (Exception ex)
                  {
-                     var callApiException = new CallApiException(UNKNOW_API_EXCEPTION, ex);
+                     var callApiException = new CallApiException(UNKNOWN_API_EXCEPTION, ex);
                      throw callApiException;
                  }
      
                  return result;
              }
              
-             /// <summary>
-             /// Upload an file with HTTP Post
+              /// <summary>
+             /// Execute HTTP POST call
              /// </summary>
-             /// <param name="url"></param>
-             /// <param name="fieldNameOfFileInForm"></param>
-             /// <param name="filename"></param>
-             /// <param name="fileAsBites"></param>
-             /// <param name="formFiels"></param>
-             /// <param name="clientConfig"></param>
-             /// <typeparam name="T"></typeparam>
-             /// <returns></returns>
-             /// <exception cref="CallApiException"></exception>
-             protected async Task<T> PotFile<T>(string url, string fieldNameOfFileInForm, string filename, byte[] fileAsBites, Dictionary<string, string> formFiels = null, HttpClientConfig  clientConfig = null)
+             /// <param name="url">Api address</param>
+             /// <param name="fileContent">Bite array from Json</param>
+              /// <param name="queryString">Data to send into URL</param>
+             /// <param name="httpClientConfig">Http client configuration</param>
+             /// <param name="applicationType">Application Type</param>
+             /// <typeparam name="T">Expected returned Type</typeparam>
+             /// <returns>Return an instance of expected type <see cref="T"/> </returns>
+             /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
+             /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
+             /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
+             /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
+             protected async Task<T> ApiPutFile<T>(
+                  string url, 
+                  byte[] fileContent, 
+                  Dictionary<string, string> queryString = null,
+                  HttpClientConfig  httpClientConfig = null, 
+                  string applicationType = "application/octet-stream")
              {
                  T result;
      
                  try
                  {
-                     using (HttpClient client = CreateHttpClient(clientConfig))
+                     url = CreateUrlWithParameters(url, queryString);
+                     string base64String = Convert.ToBase64String(fileContent);
+                     
+                     using (HttpClient client = CreateHttpClient(httpClientConfig))
                      {
-                         using (MultipartFormDataContent form = new MultipartFormDataContent())
-                         { 
-                             if (formFiels != null)
-                             {
-                                 foreach (var data in formFiels)
-                                 {
-                                     form.Add(new StringContent(data.Value), data.Key);
-                                 }
-                             }
+                         StringContent stringContent = new StringContent(base64String, Encoding.UTF8, applicationType);
      
-                             form.Add(new ByteArrayContent(fileAsBites, 0, fileAsBites.Length), fieldNameOfFileInForm, filename);
-                             HttpResponseMessage requestResult = await client.PostAsync(url, form);
+                         HttpResponseMessage requestResult = await client.PutAsync(url, stringContent);
      
-                             string responseContent = await requestResult.Content.ReadAsStringAsync();
-     
-                             if (requestResult.StatusCode == HttpStatusCode.OK)
-                             {
-                                 result = JsonConvert.DeserializeObject<T>(responseContent);
-                             }
-                             else
-                             {
-                                 var exception = ExtractException(requestResult.StatusCode, responseContent);
-                                 throw exception;
-                             }
-                         }
+                         result = await ReadAsyncRemoteContent<T>(requestResult);
                      }
+//                     using (HttpClient client = CreateHttpClient(httpClientConfig))
+//                     {
+//                         using (var content = new ByteArrayContent(fileContent))
+//                         {    
+//                             content.Headers.ContentType = new MediaTypeHeaderValue(applicationType);
+//                             HttpResponseMessage requestResult = await client.PutAsync(url, content);
+//                             result = await ReadAsyncRemoteContent<T>(requestResult);
+//                         }
+//                     }
                  }
                  catch (UnautorizeApiException)
                  {
@@ -146,12 +147,88 @@ namespace Confluence2AzureDevOps.Base
                  }
                  catch (Exception ex)
                  {
-                     var callApiException = new CallApiException(UNKNOW_API_EXCEPTION, ex);
+                     var callApiException = new CallApiException(UNKNOWN_API_EXCEPTION, ex);
                      throw callApiException;
                  }
      
                  return result;
              }
+
+//             /// <summary>
+//             /// Upload an file with HTTP Post
+//             /// </summary>
+//             /// <param name="url"></param>
+//             /// <param name="fieldNameOfFileInForm">The name for the HTTP content to add</param>
+//             /// <param name="filename">The file name for the HTTP content to add to the collection.</param>
+//             /// <param name="fileAsBites"></param>
+//             /// <param name="queryString"></param>
+//             /// <param name="formFiles"></param>
+//             /// <param name="clientConfig"></param>
+//             /// <typeparam name="T"></typeparam>
+//             /// <returns></returns>
+//             /// <exception cref="CallApiException"></exception>
+//             protected async Task<T> PutFile<T>(
+//                 string url,
+//                 string filename, 
+//                 byte[] fileAsBites,
+//                 string fieldNameOfFileInForm = null, 
+//                 Dictionary<string, string> queryString = null,  
+//                 Dictionary<string, string> formFiles = null, 
+//                 HttpClientConfig  clientConfig = null)
+//             {
+//                 T result;
+//     
+//                 try
+//                 {
+//                     url = CreateUrlWithParameters(url, queryString);
+//                     
+//                     using (HttpClient client = CreateHttpClient(clientConfig))
+//                     {
+//                         using (MultipartFormDataContent form = new MultipartFormDataContent())
+//                         { 
+//                             if (formFiles != null)
+//                             {
+//                                 foreach (var data in formFiles)
+//                                 {
+//                                     form.Add(new StringContent(data.Value), data.Key);
+//                                 }
+//                             }
+//
+//                             if (string.IsNullOrEmpty(fieldNameOfFileInForm))
+//                             {
+//                                 form.Add(new ByteArrayContent(fileAsBites, 0, fileAsBites.Length), filename);
+//                             }
+//                             else
+//                             {
+//                                 form.Add(new ByteArrayContent(fileAsBites, 0, fileAsBites.Length), fieldNameOfFileInForm, filename);    
+//                             }
+//     
+//                             HttpResponseMessage requestResult = await client.PutAsync(url, form);
+//                             
+//                             result = await ReadAsyncRemoteContent<T>(requestResult);
+//                         }
+//                     }
+//                 }
+//                 catch (UnautorizeApiException)
+//                 {
+//                     throw;
+//                 }
+//                 catch (ApiInvalidInputDataException)
+//                 {
+//                     throw;
+//                 }
+//                 catch (ApiException)
+//                 {
+//                     throw;
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     var callApiException = new CallApiException(UNKNOWN_API_EXCEPTION, ex);
+//                     throw callApiException;
+//                 }
+//     
+//                 return result;
+//             }
              
              #endregion
              
@@ -204,7 +281,7 @@ namespace Confluence2AzureDevOps.Base
                  }
                  catch (Exception ex)
                  {
-                     var callApiException = new CallApiException(UNKNOW_API_EXCEPTION, ex);
+                     var callApiException = new CallApiException(UNKNOWN_API_EXCEPTION, ex);
                      throw callApiException;
                  }
      
@@ -218,18 +295,18 @@ namespace Confluence2AzureDevOps.Base
              /// Execute HTTP POST call
              /// </summary>
              /// <param name="url">Api address</param>
-             /// <param name="querystring">Data to send (its will be transformed to JSON)</param>
+             /// <param name="queryString">Data to send (its will be transformed to JSON)</param>
              /// <param name="httpClientConfig">Http client configuration</param>
              /// <typeparam name="T">Expected returned Type</typeparam>
              /// <returns>Return instance of <see cref="T"/></returns>
              /// <exception cref="CallApiException"></exception>
-             protected async Task<T> ApiGet<T>(string url, Dictionary<string, string> querystring = null, HttpClientConfig  httpClientConfig = null)
+             protected async Task<T> ApiGet<T>(string url, Dictionary<string, string> queryString = null, HttpClientConfig  httpClientConfig = null)
              {
                  T result;
                      
                  try
                  {
-                     url = CreateUrlWithParameters(url, querystring);
+                     url = CreateUrlWithParameters(url, queryString);
                      
                      using (HttpClient client = CreateHttpClient(httpClientConfig))
                      {
@@ -252,7 +329,7 @@ namespace Confluence2AzureDevOps.Base
                  }
                  catch (Exception ex)
                  {
-                     var callApiException = new CallApiException(UNKNOW_API_EXCEPTION, ex);
+                     var callApiException = new CallApiException(UNKNOWN_API_EXCEPTION, ex);
                      throw callApiException;
                  }
      
@@ -299,7 +376,7 @@ namespace Confluence2AzureDevOps.Base
                      }
                      catch (Exception serException)
                      {
-                         var callApiException = new CallApiException(DESERIALIZ_EXCEPTION, serException);
+                         var callApiException = new CallApiException(DESERIALIZE_EXCEPTION, serException);
                          throw callApiException;
                      }
                  }
@@ -318,7 +395,7 @@ namespace Confluence2AzureDevOps.Base
                  
                  if (statusCode == HttpStatusCode.NonAuthoritativeInformation)
                  {
-                     exceptionResult = new UnautorizeApiException(MISSING_ACCES_TOKEN);
+                     exceptionResult = new UnautorizeApiException(MISSING_ACCESS_TOKEN);
                  }
                  if (statusCode == HttpStatusCode.Unauthorized)
                  {
@@ -333,7 +410,7 @@ namespace Confluence2AzureDevOps.Base
                  
                  if (exceptionResult == null)
                  {
-                     exceptionResult = new ApiException(UNKNOW_API_EXCEPTION);
+                     exceptionResult = new ApiException(UNKNOWN_API_EXCEPTION);
                      exceptionResult.Data.Add("Service-HttpStatusCode", statusCode.ToString());
                      exceptionResult.Data.Add("Service-ResponseContent", responseContent);
                  }

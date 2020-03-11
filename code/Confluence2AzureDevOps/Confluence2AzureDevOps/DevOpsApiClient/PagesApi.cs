@@ -8,6 +8,7 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
 {
     /// <summary>
     /// Azure devops API
+    /// <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/get%20page?view=azure-devops-rest-5.1"/>
     /// </summary>
     public class PagesApi : DevOpsApiBase
     {
@@ -19,8 +20,9 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
         /// <param name="wikiIdentifier">Wiki Id or name.</param>
         /// <param name="personalAccessToken">PAT (DevOps personal access token)</param>
         /// <param name="apiVersion">Version of the API to use. This should be set to '5.1' to use this version of the api.</param>
-        public PagesApi(string organization, string project, string wikiIdentifier, string personalAccessToken, string apiVersion = "5.1")
-            : base(organization, project, wikiIdentifier, personalAccessToken, apiVersion)
+        public PagesApi(string organization, string project, string wikiIdentifier, string personalAccessToken,
+            string apiVersion = "5.1")
+            : base(organization, project, wikiIdentifier, personalAccessToken, "pages", apiVersion)
         {
         }
 
@@ -41,7 +43,7 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
 
             DtWikiPage page = await ApiGet<DtWikiPage>(
                 UrlBase,
-                querystring: queryString,
+                queryString: queryString,
                 httpClientConfig: HttpClientConfig);
 
             return page;

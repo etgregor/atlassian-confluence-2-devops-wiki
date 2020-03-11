@@ -1,19 +1,16 @@
+using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
 
 namespace Confluence2AzureDevOpsTests
 {
     public class TestsForWikiMigratorHtmlToMd
     {
-        // private PagesApi _target;
-        private string _localWikiSourceFolder;
         
-        private string _localWikiDestinatioFolder;
-
         [SetUp]
         public void Setup()
         {
-            _localWikiSourceFolder = TestContext.Parameters["localWikiSourceFolder"];
-            _localWikiDestinatioFolder = TestContext.Parameters["localWikiDestinatioFolder"];
+            // Init test values.
+            LocalSettingTests setting = TestUtils.GetLocalSettings();
 
 //            _project = TestContext.Parameters["project"];
 //            
