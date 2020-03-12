@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using Confluence2AzureDevOps.Base.CustomExceptions;
 using Newtonsoft.Json;
 
@@ -52,13 +53,13 @@ namespace Confluence2AzureDevOps.Utils
         
         public static string ReadFileContent(params string[] paths)
         {
-            string filePath = System.IO.Path.Combine(paths);
+            string filePath = Path.Combine(paths);
             string fileContent = string.Empty;
             
             if (System.IO.File.Exists(filePath))
             {
-                string path = System.IO.Path.Combine(filePath);
-                fileContent = System.IO.File.ReadAllText(path);
+                string path = Path.Combine(filePath);
+                fileContent = File.ReadAllText(path);
             }
 
             return fileContent;
@@ -81,11 +82,11 @@ namespace Confluence2AzureDevOps.Utils
         {
             Guard.PreventStringEmpty("filePath", filePath);
 
-            using (var logFile = System.IO.File.Create(filePath))
+            using (FileStream fileStream = File.Create(filePath))
             {
-                using (var logWriter = new System.IO.StreamWriter(logFile))
+                using (StreamWriter writer = new StreamWriter(fileStream, Encoding.UTF8))
                 {
-                    logWriter.Write(content);
+                    writer.Write(content);
                 }    
             }
         }

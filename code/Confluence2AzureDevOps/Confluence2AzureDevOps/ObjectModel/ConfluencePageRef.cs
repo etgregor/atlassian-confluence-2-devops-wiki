@@ -6,7 +6,7 @@ namespace Confluence2AzureDevOps.ObjectModel
     /// References por create tree pages from index.html file.
     /// xpath selector //*[@id="content"]/div[2]/ul
     /// </summary>
-    internal class ConfluencePageRef
+    public class ConfluencePageRef
     {
         public ConfluencePageRef()
         {
@@ -15,6 +15,9 @@ namespace Confluence2AzureDevOps.ObjectModel
         
         public string HtmlTitle { get; set; }
 
+        /// <summary>
+        /// Name of html file in local storage
+        /// </summary>
         public string HtmlLocalFileName { get; set; }
 
         /// <summary>

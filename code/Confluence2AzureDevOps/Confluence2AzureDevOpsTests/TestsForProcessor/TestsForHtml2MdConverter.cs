@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using Confluence2AzureDevOps.ObjectModel;
 using Confluence2AzureDevOps.Processor;
 using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
@@ -15,7 +17,13 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             // Init test values.
             LocalSettingTests setting = TestUtils.GetLocalSettings();
 
-            _converter = new Html2MdConverter(setting.LocalWikiSourceFolder, setting.LocalWikiDestinatioFolder);
+            string testTransformId = $"TestTransform_{DateTime.Now:ddMMyyHHmmss}";
+
+            string workingDir =  Path.Combine(setting.LocalWikiDestinatioFolder, testTransformId);
+
+            _converter = new Html2MdConverter(setting.LocalWikiSourceFolder, workingDir);
+
+            _converter.ProcessNotifier = WriteProcess;
         }
 
         [Test]
@@ -23,13 +31,18 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
         {
             try
             {    
-                _converter.StartConvertion();
-                Assert.IsTrue(true);
+                ConfluencePageRef siteMapIndex =  _converter.ConvertHtmlToMdFiles();
+                Assert.IsNotNull(siteMapIndex);
             }
             catch (Exception e)
             {
                 Assert.Fail(e.Message);
             }
+        }
+
+        private void WriteProcess(string message)
+        {
+            System.Diagnostics.Debug.WriteLine(message);
         }
     }
 }

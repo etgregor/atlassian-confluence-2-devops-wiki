@@ -29,10 +29,10 @@ namespace Confluence2AzureDevOps
             outputConvertionMdFiles = Path.Combine(config.LocalConfig.LocalWorkspacePath, $"MD{migrationId}");
         }
 
-        public void StartMigration()
+        public void StartMigration(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
         {
             _converter = new Html2MdConverter(_config.LocalConfig.LocalConfluencePath, outputConvertionMdFiles);
-            _converter.StartConvertion();
+            _converter.ConvertHtmlToMdFiles(confluenceIndexFile, selectorOfIndexControl);
         }
     }
 }
