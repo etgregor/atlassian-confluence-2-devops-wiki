@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using Confluence2AzureDevOps.ObjectModel;
 using Confluence2AzureDevOps.Processor;
 using Confluence2AzureDevOpsTests.UtilsForTesting;
@@ -10,18 +11,26 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
     public class TestsForHtml2MdConverter
     {
         private Html2MdConverter _converter;
+
+        private StringBuilder _log;
+
+        private string _testTransformId;
+        
+        private string _workingDir;
         
         [SetUp]
         public void Setup()
         {
+            _log = new StringBuilder();
+            
             // Init test values.
             LocalSettingTests setting = TestUtils.GetLocalSettings();
 
-            string testTransformId = $"TestTransform_{DateTime.Now:ddMMyyHHmmss}";
+            _testTransformId = $"TestTransform_{DateTime.Now:ddMMyyHHmmss}";
 
-            string workingDir =  Path.Combine(setting.LocalWikiDestinatioFolder, testTransformId);
+            _workingDir =  Path.Combine(setting.LocalWikiDestinatioFolder, _testTransformId);
 
-            _converter = new Html2MdConverter(setting.LocalWikiSourceFolder, workingDir);
+            _converter = new Html2MdConverter(setting.LocalWikiSourceFolder, _workingDir);
 
             _converter.ProcessNotifier = WriteProcess;
         }
@@ -33,6 +42,13 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             {    
                 ConfluencePageRef siteMapIndex =  _converter.ConvertHtmlToMdFiles();
                 Assert.IsNotNull(siteMapIndex);
+
+                string logPath = Path.Combine(_workingDir, "Log.txt");
+                
+                using (var writer = System.IO.File.CreateText(logPath))
+                {
+                    writer.WriteLine(_log.ToString());
+                }
             }
             catch (Exception e)
             {
@@ -42,7 +58,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
 
         private void WriteProcess(string message)
         {
-            System.Diagnostics.Debug.WriteLine(message);
+            _log.AppendLine(message);
         }
     }
 }

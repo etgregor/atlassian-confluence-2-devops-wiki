@@ -136,7 +136,9 @@ namespace Confluence2AzureDevOps.Processor
                     throw new GenericC2AException($"Cant get main menu element, xpath: {ulElementSelector}");
                 }
 
-                GetPageInfoFromHtmlLinkElement(ref wikiMainPage, bodyNode);
+                List<ConfluencePageRef> nodes = GetPageInfoFromHtmlLinkElement(bodyNode.ChildNodes);
+                
+                wikiMainPage = nodes.FirstOrDefault();
             }
             
             if (wikiMainPage == null)
@@ -149,8 +151,6 @@ namespace Confluence2AzureDevOps.Processor
 
         private void ConvertHtml2Markdown(string nodePath, ConfluencePageRef wikiPageInfo)
         {
-            NotifyProcess($"Start processing file: {wikiPageInfo.PageTitleAtAzureDevOps} ({wikiPageInfo.HtmlLocalFileName})");
-            
             string markdownFileName = ConvertHtml2Markdown(wikiPageInfo);
 
             if (!string.IsNullOrEmpty(markdownFileName))
@@ -205,7 +205,7 @@ namespace Confluence2AzureDevOps.Processor
                 }
                 else
                 {
-                    ProcessNotifier($"File already exists {fileExists}");
+                    ProcessNotifier($"WARN: File already exists {fileExists}");
                 }
             }
 
@@ -217,42 +217,67 @@ namespace Confluence2AzureDevOps.Processor
         /// </summary>
         /// <param name="confluencePageRef"></param>
         /// <param name="bodyNode"></param>
-        private void GetPageInfoFromHtmlLinkElement(ref ConfluencePageRef parentNode, HtmlNode bodyNode)
+//        private void GetPageInfoFromHtmlLinkElement(ref ConfluencePageRef parentNode, HtmlNode bodyNode)
+//        {
+//            ConfluencePageRef subNodeInfo = null;
+//            
+//            foreach (HtmlNode child in bodyNode.ChildNodes)
+//            {
+//                if (child.Name == "a")
+//                {
+//                    if (subNodeInfo == null)
+//                    {
+//                        subNodeInfo = GetNodeInfo(child);
+//                    }
+//                }
+//                else if (child.HasChildNodes)
+//                {
+//                    GetPageInfoFromHtmlLinkElement(ref subNodeInfo, child);
+//                }
+//            }
+//
+//            if (subNodeInfo != null)
+//            {
+//                if (parentNode == null)
+//                {
+//                    parentNode = subNodeInfo;
+//                }
+//                else
+//                {
+//                    parentNode.SubPages.Add(subNodeInfo);
+//                }
+//            }
+//        }
+
+        private List<ConfluencePageRef> GetPageInfoFromHtmlLinkElement(HtmlNodeCollection nodes)
         {
-            ConfluencePageRef subNodeInfo = null;
-            bool nodeAlreadyAdded = false;
+            var result = new List<ConfluencePageRef>();
+
+            ConfluencePageRef newNode = null;
             
-            foreach (HtmlNode child in bodyNode.ChildNodes.Descendants())
+            foreach (HtmlNode child in nodes)
             {
                 if (child.Name == "a")
-                {
-                    if (parentNode == null)
-                    {
-                        // detected first menu
-                        parentNode = GetNodeInfo(child);
-                    }
-                    else
-                    {
-                        if (subNodeInfo != null)
-                        {
-                            parentNode.SubPages.Add(subNodeInfo);
-                        }
-                        
-                        subNodeInfo = GetNodeInfo(child);
-                    }
+                {   
+                    newNode = GetNodeInfo(child);
+                    result.Add(newNode);
                 }
                 else if (child.HasChildNodes)
                 {
-                    if (subNodeInfo != null)
+                    var childrenNodes = GetPageInfoFromHtmlLinkElement(child.ChildNodes);
+                    
+                    if (newNode != null)
                     {
-                        GetPageInfoFromHtmlLinkElement(ref subNodeInfo, child);
+                        newNode.SubPages.AddRange(childrenNodes);
                     }
                     else
                     {
-                        GetPageInfoFromHtmlLinkElement(ref parentNode, child);
+                        result.AddRange(childrenNodes);
                     }
                 }
             }
+
+            return result;
         }
 
         private ConfluencePageRef GetNodeInfo(HtmlNode htmlNode)
