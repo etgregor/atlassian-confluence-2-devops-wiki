@@ -52,7 +52,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             }
             catch (Exception e)
             {
-                Assert.Fail(e.Message);
+                Assert.Fail(e.Message + "" + e.StackTrace);
             }
         }
 
