@@ -30,7 +30,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             _testTransformId = $"TestTransform_{DateTime.Now:ddMMyyHHmmss}";
 
             _workingDir =  Path.Combine(config.LocalConfig.LocalWorkspacePath, _testTransformId);
-
+            
             _converter = new Html2MdConverter(config.LocalConfig.LocalConfluencePath, _workingDir);
 
             _converter.ProcessNotifier = WriteProcess;

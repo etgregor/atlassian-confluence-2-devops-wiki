@@ -16,10 +16,21 @@ namespace Confluence2AzureDevOps.Utils
             bool readComplete;
             readError = string.Empty;
             htmlDoc = null;
-            
+
             try
             {
-                htmlDoc = new HtmlDocument {OptionFixNestedTags = true};
+                // string htmlContent =  IoUtils.ReadFileContent(filePath);
+                //
+                // if (string.IsNullOrEmpty(htmlContent))
+                // {
+                //     return false;
+                // }
+                //
+                // htmlContent = RemoveMultiplesSpaces(htmlContent);
+                    
+                htmlDoc = new HtmlDocument {OptionFixNestedTags = true };
+                
+                //htmlDoc.LoadHtml(htmlContent);
                 htmlDoc.Load(filePath);
 
                 if (htmlDoc.ParseErrors != null && htmlDoc.ParseErrors.Any())
@@ -40,15 +51,16 @@ namespace Confluence2AzureDevOps.Utils
             {
                 readComplete = false;
                 readError = e.Message;
+                Trace.TraceWarning("TryReadDocumentAsHtml: {0}", e);
             }
 
             return readComplete;
         }
-        
+
         internal static LinkElementInfo GetLinkInfo(HtmlNode htmlNode)
         {
             LinkElementInfo linkReference = null;
-            
+
             try
             {
                 string hrefValue = htmlNode.GetAttributeValue("href", string.Empty);
@@ -60,31 +72,33 @@ namespace Confluence2AzureDevOps.Utils
                     linkReference = new LinkElementInfo(hrefValue, linkCaption);
                 }
             }
-            catch
+            catch (Exception e)
             {
                 linkReference = null;
+                Trace.TraceWarning("GetLinkInfo: {0}", e);
             }
 
             return linkReference;
         }
-        
+
         internal static LinkElementInfo GetImgInfo(HtmlNode htmlNode)
         {
             LinkElementInfo linkReference = null;
-            
+
             try
             {
                 string hrefValue = htmlNode.GetAttributeValue("src", string.Empty);
-                
+
                 var uri = new Uri(hrefValue);
-                
+
                 string path = uri.GetLeftPart(UriPartial.Path);
-                
+
                 linkReference = new LinkElementInfo(path, string.Empty);
             }
-            catch
+            catch (Exception e)
             {
                 linkReference = null;
+                Trace.TraceWarning("GetImgInfo: {0}", e);
             }
 
             return linkReference;
@@ -99,11 +113,11 @@ namespace Confluence2AzureDevOps.Utils
         internal static bool TryGetCodeSnipped(HtmlNode htmlNode, out CodeSectionInfo codeSectionInfo)
         {
             bool isCodeSection = false;
-            
+
             codeSectionInfo = null;
 
             HtmlSectionType elementType = IdentifyElementType(htmlNode);
-            
+
             try
             {
                 if (elementType == HtmlSectionType.CodeSection)
@@ -113,10 +127,11 @@ namespace Confluence2AzureDevOps.Utils
                         string header = string.Empty;
                         string snippet = string.Empty;
                         string codeLanguage = string.Empty;
-                            
+
                         foreach (HtmlNode codeChild in htmlNode.ChildNodes)
                         {
-                            string cssClassValue = codeChild.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
+                            string cssClassValue =
+                                codeChild.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
 
                             if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_HEADER))
                             {
@@ -130,8 +145,9 @@ namespace Confluence2AzureDevOps.Utils
                             {
                                 foreach (HtmlNode grandSon in codeChild.ChildNodes)
                                 {
-                                    string subChildClass = grandSon.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
-                                    
+                                    string subChildClass =
+                                        grandSon.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
+
                                     if (subChildClass.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_BODY))
                                     {
                                         codeLanguage = GetCodeFlavor(grandSon, out snippet);
@@ -144,23 +160,24 @@ namespace Confluence2AzureDevOps.Utils
                         {
                             codeSectionInfo = new CodeSectionInfo
                             {
-                                Title = header, 
-                                CodeSnippet = snippet, 
+                                Title = header,
+                                CodeSnippet = snippet,
                                 Language = codeLanguage
                             };
 
-                            isCodeSection = true;    
+                            isCodeSection = true;
                         }
                         else
                         {
-                            System.Diagnostics.Trace.TraceInformation("There is not code info");
+                            Trace.TraceInformation("There is not code info");
                         }
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
                 isCodeSection = false;
+                Trace.TraceWarning("TryGetCodeSnipped: {0}", e);
             }
 
             return isCodeSection;
@@ -188,12 +205,50 @@ namespace Confluence2AzureDevOps.Utils
                     isMetadata = true;
                 }
             }
-            catch
+            catch (Exception e)
             {
                 isMetadata = false;
+                Trace.TraceWarning("TryGetMetadataInfo: {0}", e);
             }
 
             return isMetadata;
+        }
+
+
+        internal static bool ContainsTableElement(HtmlNode htmlNode,out HtmlNode tableNode)
+        {
+            bool isTableElement = false;
+            tableNode = null;
+            
+            HtmlSectionType sectionType = IdentifyElementType(htmlNode);
+
+            try
+            {
+                if (sectionType == HtmlSectionType.TableSection)
+                {
+                    foreach (HtmlNode divChild in htmlNode.ChildNodes)
+                    {
+                        if (divChild.Name == HtmlConstants.HTML_TABLE)
+                        {
+                            tableNode = divChild;
+                            isTableElement = true;
+                            break;
+                        }
+                    }
+
+                    if (!isTableElement)
+                    {
+                        Trace.TraceWarning("Element is table container but not contains element 'table'");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                isTableElement = false;
+                Trace.TraceWarning("ContainsTableElement: {0}", e);
+            }
+
+            return isTableElement;
         }
 
         private static HtmlSectionType IdentifyElementType(HtmlNode htmlNode)
@@ -202,28 +257,28 @@ namespace Confluence2AzureDevOps.Utils
 
             try
             {
-                string hrefValue = htmlNode.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
+                string cssClassValue = htmlNode.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
 
-                if (!string.IsNullOrEmpty(hrefValue))
+                if (!string.IsNullOrEmpty(cssClassValue))
                 {
-                    if (hrefValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_SECTION))
+                    if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_SECTION))
                     {
                         type = HtmlSectionType.CodeSection;
                     }
-                    else if (hrefValue.Contains(HtmlConstants.CSS_CLASS_FOR_METADATA))
+                    else if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_METADATA))
                     {
                         type = HtmlSectionType.MetadataSection;
                     }
-                }
-
-                if (!string.IsNullOrEmpty(hrefValue) && hrefValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_SECTION))
-                {
-                    type = HtmlSectionType.CodeSection;
+                    else if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_TABLE_CONTENT))
+                    {
+                        type = HtmlSectionType.TableSection;
+                    }
                 }
             }
-            catch
+            catch (Exception e)
             {
                 type = HtmlSectionType.NotIdentified;
+                Trace.TraceWarning("IdentifyElementType: {0}", e);
             }
 
             return type;
@@ -241,17 +296,17 @@ namespace Confluence2AzureDevOps.Utils
             {
                 return title;
             }
-            
+
             title = title.Replace("\n", " ");
-            
+
             Regex diagonals = new Regex("[\\\\/']");
             title = diagonals.Replace(title, "-");
-            
+
             Regex invalidChars = new Regex("[;\\\\/:*?\"<>|&']");
-            
+
             title = invalidChars.Replace(title, " ");
             title = title.Replace(".", "_");
-            
+
             title = RemoveMultiplesSpaces(title);
 
             title = RemoveDiacritics(title);
@@ -259,14 +314,26 @@ namespace Confluence2AzureDevOps.Utils
             return title;
         }
 
+        internal static string RemoveMultiplesSpaces(string originalValue)
+        {
+            if (string.IsNullOrEmpty(originalValue))
+            {
+                return originalValue;
+            }
+
+            originalValue = Regex.Replace(originalValue, @"\s+", " ");
+
+            return originalValue;
+        }
+        
         private static string GetCodeFlavor(HtmlNode codeChild, out string codeSnippet)
         {
-            string codeLanguage = string.Empty; 
-            
+            string codeLanguage = string.Empty;
+
             string syntaxHighlighter = codeChild.GetAttributeValue("data-syntaxhighlighter-params", string.Empty);
 
             codeSnippet = codeChild.InnerText;
-            
+
             if (!string.IsNullOrEmpty(syntaxHighlighter))
             {
                 var values = syntaxHighlighter.Split(';');
@@ -290,12 +357,12 @@ namespace Confluence2AzureDevOps.Utils
         private static string GetChildText(HtmlNode htmlNode)
         {
             var text = new StringBuilder();
-            
+
             if (!string.IsNullOrEmpty(htmlNode.InnerText))
             {
                 text.AppendFormat(htmlNode.InnerText.Trim(), ",");
             }
-            
+
             if (htmlNode.HasChildNodes)
             {
                 foreach (HtmlNode child in htmlNode.ChildNodes)
@@ -303,11 +370,11 @@ namespace Confluence2AzureDevOps.Utils
                     text.Append(GetChildText(child));
                 }
             }
- 
+
             return text.ToString();
         }
-        
-        private static string RemoveDiacritics(string text) 
+
+        private static string RemoveDiacritics(string text)
         {
             var normalizedString = text.Normalize(NormalizationForm.FormD);
             var stringBuilder = new StringBuilder();
@@ -322,18 +389,6 @@ namespace Confluence2AzureDevOps.Utils
             }
 
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
-        }
-
-        private  static string RemoveMultiplesSpaces(string originalValue)
-        {
-            if (string.IsNullOrEmpty(originalValue))
-            {
-                return originalValue;
-            }
-            
-            originalValue = Regex.Replace(originalValue, @"\s+", " ");
-
-            return originalValue;
         }
     }
 }

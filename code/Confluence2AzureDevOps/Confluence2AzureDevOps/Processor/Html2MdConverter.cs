@@ -243,13 +243,13 @@ namespace Confluence2AzureDevOps.Processor
             }
         }
 
-        private void PrepareHtmlFile(ConfluencePageRef confluencePageRef)
+        public void PrepareHtmlFile(ConfluencePageRef confluencePageRef)
         {
             HtmlDocument htmlPage = ReadOriginalFileAsHtml(confluencePageRef.HtmlLocalFileName);
     
             if (htmlPage != null)
             {
-                CleanupHtmlElements(confluencePageRef,  htmlPage.DocumentNode.ChildNodes);
+                ApplyCustomConversions(confluencePageRef,  htmlPage.DocumentNode.ChildNodes);
                 
                 List<LinkElementInfo> linksOnPage = GetLinksElement(htmlPage.DocumentNode.ChildNodes);
                 
@@ -271,10 +271,15 @@ namespace Confluence2AzureDevOps.Processor
 
             if (!string.IsNullOrEmpty(htmlSourceFolder))
             {
-               // - backup file 
-                var backupFile = Path.Combine(_originalHtmlDir, htmlLocalFileName);
-
-                File.Copy(htmlSourceFolder, backupFile);
+                // - backup file 
+                // var backupFile = Path.Combine(_originalHtmlDir, htmlLocalFileName);
+                //
+                // if (File.Exists(backupFile))
+                // {
+                //     File.Delete(backupFile);
+                // }
+                //
+                // File.Copy(htmlSourceFolder, backupFile);
                 // - backup file
                 
                 if (HtmlUtils.TryReadDocumentAsHtml(htmlSourceFolder, out file, out string readingErrors))
@@ -331,27 +336,32 @@ namespace Confluence2AzureDevOps.Processor
             return result;
         }
 
-        private void CleanupHtmlElements(ConfluencePageRef confluencePageRef, HtmlNodeCollection nodes)
+        private void ApplyCustomConversions(ConfluencePageRef confluencePageRef, HtmlNodeCollection nodes)
         {
-            var nodesToRemove = new List<HtmlNode>();
+            var elementsToRemove = new List<HtmlNode>();
 
             foreach (HtmlNode child in nodes)
             {
-                if (string.Equals(child.Name, "script"))
+                if (string.Equals(child.Name, HtmlConstants.HTML_SCRIPT)  
+                    || string.Equals(child.Name, HtmlConstants.HTML_HEAD))
                 {
-                    nodesToRemove.Add(child);
+                    elementsToRemove.Add(child);
                 }
-                else if (string.Equals(child.Name, "head"))
+                else if (string.Equals(child.Name, HtmlConstants.HTML_DIV) 
+                         && HtmlUtils.ContainsTableElement(child, out HtmlNode tableNode))
                 {
-                    nodesToRemove.Add(child);
+                    // Process element only if is unique child
+                    //HtmlNode tableNode = child.FirstChild;
+                    var cleaner = new HtmlTableCleaner(tableNode);
+                    child.InnerHtml = cleaner.GetTableDefinition();
                 }
-                else if (string.Equals(child.Name, "div") &&
+                else if (string.Equals(child.Name,  HtmlConstants.HTML_DIV) &&
                          HtmlUtils.TryGetCodeSnipped(child, out CodeSectionInfo codeSectionInfo))
                 {
                     // Formatting code sections
                     child.InnerHtml = codeSectionInfo.ToString();
                 }
-                else if (string.Equals(child.Name, "div") && HtmlUtils.TryGetMetadataInfo(child, out string metadata))
+                else if (string.Equals(child.Name, HtmlConstants.HTML_DIV) && HtmlUtils.TryGetMetadataInfo(child, out string metadata))
                 {
                     // replace metadata file
                     child.InnerHtml = metadata;
@@ -363,12 +373,12 @@ namespace Confluence2AzureDevOps.Processor
                 }
                 else if (child.HasChildNodes)
                 {
-                    CleanupHtmlElements(confluencePageRef, child.ChildNodes);
+                    ApplyCustomConversions(confluencePageRef, child.ChildNodes);
                 }
             }
 
             // remove invalid elements
-            foreach (HtmlNode htmlNode in nodesToRemove)
+            foreach (HtmlNode htmlNode in elementsToRemove)
             {
                 nodes.Remove(htmlNode);
             }
@@ -389,18 +399,21 @@ namespace Confluence2AzureDevOps.Processor
                 mdFileContent = mdFileContent.Replace(HtmlConstants.NEW_LINE, "\n");
                 mdFileContent = mdFileContent.Replace(HtmlConstants.BOLD_STILE, "**");
                 mdFileContent = mdFileContent.Replace(HtmlConstants.ITALIC_STILE, "_");
-   
+                mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_LINK_TO_SECTION, "#");
+                mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_SECTION, "#####");
+                // mdFileContent = HtmlUtils.RemoveMultiplesSpaces(mdFileContent);
+                
                 string fileDestinyFullPath = Path.Combine(_resultDir, confluencePageRef.MarkdownLocalFilename);
 
                 string fileExists = IoUtils.GetPathIfFileExists(_resultDir, confluencePageRef.MarkdownLocalFilename);
-                
+
                 if (string.IsNullOrEmpty(fileExists))
                 {
                     IoUtils.SaveFile(fileDestinyFullPath, mdFileContent);
                 }
                 else
                 {
-                    ProcessNotifier($"WARN: File already exists {fileExists}");
+                    ProcessNotifier($"WARN: File already exists: {confluencePageRef.HtmlLocalFileName}  => {fileExists}");
                 }
             }
         }

@@ -11,6 +11,11 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         /// <summary>
         /// Is metadata section
         /// </summary>
-        MetadataSection
+        MetadataSection,
+        
+        /// <summary>
+        /// Is table section
+        /// </summary>
+        TableSection
     }
 }

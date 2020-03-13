@@ -38,12 +38,57 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         /// </summary>
         internal const string CSS_CLASS_FOR_CODE_HEADER = "codeHeader";
 
+        /// <summary>
+        /// Element that contains child <see cref="CSS_CLASS_FOR_CODE_BODY"/>
+        /// </summary>
         internal const string CSS_CLASS_FOR_CODE_CONTENT = "codeContent";
         
+        /// <summary>
+        /// Element that contains the code
+        /// </summary>
         internal const string CSS_CLASS_FOR_CODE_BODY = "syntaxhighlighter-pre";
 
         #endregion
 
+        /// <summary>
+        /// Class name for div that has metadata info
+        /// </summary>
         internal const string CSS_CLASS_FOR_METADATA = "page-metadata";
+
+        internal const string CSS_CLASS_FOR_TABLE_CONTENT = "table-wrap";
+        
+        #region - HTML item names -
+
+        /// <summary>
+        /// Name of DIV control element
+        /// </summary>
+        internal const string HTML_DIV = "div";
+        
+        /// <summary>
+        /// Name of SCRIPT control element
+        /// </summary>
+        internal const string HTML_SCRIPT = "scrtip";
+        
+        /// <summary>
+        /// Name of HEAD control element
+        /// </summary>
+        internal const string HTML_HEAD = "head";
+        
+        /// <summary>
+        /// Name of TABLE control element
+        /// </summary>
+        internal const string HTML_TABLE = "table";
+
+        #endregion
+        
+        /// <summary>
+        /// Replaceable tag by:  #, it will looks like: [Custom foo description](#foo)
+        /// </summary>
+        internal const string INTERNAL_LINK_TO_SECTION = "GGGINTERNLINKTOSECTIONGGG";
+        
+        /// <summary>
+        /// Replaceable tag by tag:  ####, it will looks like: #### Foo
+        /// </summary>
+        internal const string INTERNAL_SECTION = "GGGINTERNSECTIONGGG";
     }
 }

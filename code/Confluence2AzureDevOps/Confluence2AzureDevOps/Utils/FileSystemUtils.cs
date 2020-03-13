@@ -56,10 +56,10 @@ namespace Confluence2AzureDevOps.Utils
             string filePath = Path.Combine(paths);
             string fileContent = string.Empty;
             
-            if (System.IO.File.Exists(filePath))
+            if (File.Exists(filePath))
             {
                 string path = Path.Combine(filePath);
-                fileContent = File.ReadAllText(path);
+                fileContent = File.ReadAllText(path, Encoding.UTF8);
             }
 
             return fileContent;
