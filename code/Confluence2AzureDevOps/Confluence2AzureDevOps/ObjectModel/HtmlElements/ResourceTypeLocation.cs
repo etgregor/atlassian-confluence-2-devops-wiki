@@ -1,6 +1,6 @@
 namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
 {
-    public enum ResourceType
+    internal enum ResourceType
     {
         Unknown = 0,
         PageExistsOnWiki,

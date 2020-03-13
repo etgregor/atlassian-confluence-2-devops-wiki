@@ -1,23 +1,45 @@
+using HtmlAgilityPack;
+
 namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
 {
-    public class CodeSectionInfo
+    internal class CodeSectionInfo
     {
         private string _codeSnippet;
-        public string Header { get; set; }
+        
+        private string _language;
+        
+        public string Title { get; set; }
 
-        public string Language { get; set; }
+        public string Language
+        {
+            get
+            {
+                return _language;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _language = value.Trim();    
+                }
+                else
+                {
+                    _language = string.Empty;
+                }
+            }
+        }
 
         public string CodeSnippet
         {
-            get { return _codeSnippet;}
-            set { _codeSnippet = System.Web.HttpUtility.HtmlDecode(value);
-        } }
+            get => _codeSnippet;
+            set => _codeSnippet = System.Web.HttpUtility.HtmlDecode(value);
+        }
 
         public override string ToString()
         {
-            string codeFormat = "\n  {0} \n\n ``` {1} \n {2} \n ``` ";
+            string codeFormat = "{3}{4}{0}{4}{3}``` {1}{3}{2}{3}```{3}";
 
-            return string.Format(codeFormat, Header, Language, _codeSnippet);
+            return string.Format(codeFormat, Title, Language, _codeSnippet, HtmlConstants.NEW_LINE, HtmlConstants.BOLD_STILE);
         }
     }
 }

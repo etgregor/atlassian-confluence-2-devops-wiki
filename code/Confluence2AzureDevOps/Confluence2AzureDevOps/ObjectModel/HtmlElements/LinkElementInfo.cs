@@ -1,6 +1,6 @@
 namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
 {
-    public class LinkElementInfo
+    internal class LinkElementInfo
     {
         public LinkElementInfo()
         {

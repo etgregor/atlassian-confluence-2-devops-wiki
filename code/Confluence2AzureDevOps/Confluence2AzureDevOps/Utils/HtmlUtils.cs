@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -89,18 +90,24 @@ namespace Confluence2AzureDevOps.Utils
             return linkReference;
         }
 
+        /// <summary>
+        /// Get <see cref="HtmlNode"/> if node is Code Section
+        /// </summary>
+        /// <param name="htmlNode">Html node</param>
+        /// <param name="codeSectionInfo">Code info, return if not is code section</param>
+        /// <returns>True id is code section, false if not is</returns>
         internal static bool TryGetCodeSnipped(HtmlNode htmlNode, out CodeSectionInfo codeSectionInfo)
         {
             bool isCodeSection = false;
+            
             codeSectionInfo = null;
+
+            HtmlSectionType elementType = IdentifyElementType(htmlNode);
             
             try
             {
-                string hrefValue = htmlNode.GetAttributeValue("class", string.Empty);
-
-                if (!string.IsNullOrEmpty(hrefValue) && hrefValue.Contains("code panel"))
+                if (elementType == HtmlSectionType.CodeSection)
                 {
-
                     if (htmlNode.HasChildNodes)
                     {
                         string header = string.Empty;
@@ -109,23 +116,23 @@ namespace Confluence2AzureDevOps.Utils
                             
                         foreach (HtmlNode codeChild in htmlNode.ChildNodes)
                         {
-                            string childClass = codeChild.GetAttributeValue("class", string.Empty);
+                            string cssClassValue = codeChild.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
 
-                            if (childClass.Contains("codeHeader"))
+                            if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_HEADER))
                             {
                                 header = codeChild.InnerText;
                             }
-                            else if (childClass.Contains("syntaxhighlighter-pre"))
+                            else if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_BODY))
                             {
                                 codeLanguage = GetCodeFlavor(codeChild, out snippet);
                             }
-                            else if (childClass.Contains("codeContent"))
+                            else if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_CONTENT))
                             {
                                 foreach (HtmlNode grandSon in codeChild.ChildNodes)
                                 {
-                                    string subChildClass = grandSon.GetAttributeValue("class", string.Empty);
+                                    string subChildClass = grandSon.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
                                     
-                                    if (subChildClass.Contains("syntaxhighlighter-pre"))
+                                    if (subChildClass.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_BODY))
                                     {
                                         codeLanguage = GetCodeFlavor(grandSon, out snippet);
                                     }
@@ -137,7 +144,7 @@ namespace Confluence2AzureDevOps.Utils
                         {
                             codeSectionInfo = new CodeSectionInfo
                             {
-                                Header = header, 
+                                Title = header, 
                                 CodeSnippet = snippet, 
                                 Language = codeLanguage
                             };
@@ -158,7 +165,70 @@ namespace Confluence2AzureDevOps.Utils
 
             return isCodeSection;
         }
-        
+
+        internal static bool TryGetMetadataInfo(HtmlNode htmlNode, out string metadata)
+        {
+            bool isMetadata = false;
+
+            metadata = string.Empty;
+
+            HtmlSectionType sectionType = IdentifyElementType(htmlNode);
+
+            try
+            {
+                if (sectionType == HtmlSectionType.MetadataSection)
+                {
+                    string metadataValue = GetChildText(htmlNode);
+
+                    if (!string.IsNullOrEmpty(metadataValue))
+                    {
+                        metadata = $"{HtmlConstants.ITALIC_STILE}{metadataValue}{HtmlConstants.ITALIC_STILE}";
+                    }
+
+                    isMetadata = true;
+                }
+            }
+            catch
+            {
+                isMetadata = false;
+            }
+
+            return isMetadata;
+        }
+
+        private static HtmlSectionType IdentifyElementType(HtmlNode htmlNode)
+        {
+            HtmlSectionType type = HtmlSectionType.NotIdentified;
+
+            try
+            {
+                string hrefValue = htmlNode.GetAttributeValue(HtmlConstants.CSS_CLASS_ATTR, string.Empty);
+
+                if (!string.IsNullOrEmpty(hrefValue))
+                {
+                    if (hrefValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_SECTION))
+                    {
+                        type = HtmlSectionType.CodeSection;
+                    }
+                    else if (hrefValue.Contains(HtmlConstants.CSS_CLASS_FOR_METADATA))
+                    {
+                        type = HtmlSectionType.MetadataSection;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(hrefValue) && hrefValue.Contains(HtmlConstants.CSS_CLASS_FOR_CODE_SECTION))
+                {
+                    type = HtmlSectionType.CodeSection;
+                }
+            }
+            catch
+            {
+                type = HtmlSectionType.NotIdentified;
+            }
+
+            return type;
+        }
+
         /// <summary>
         /// Remove invalid chars to create valid file name according to:
         /// <see cref="https://docs.microsoft.com/en-us/azure/devops/project/wiki/wiki-file-structure?view=azure-devops"/>
@@ -216,7 +286,26 @@ namespace Confluence2AzureDevOps.Utils
 
             return codeLanguage;
         }
-        
+
+        private static string GetChildText(HtmlNode htmlNode)
+        {
+            var text = new StringBuilder();
+            
+            if (!string.IsNullOrEmpty(htmlNode.InnerText))
+            {
+                text.AppendFormat(htmlNode.InnerText, ", ");
+            }
+            
+            if (htmlNode.HasChildNodes)
+            {
+                foreach (HtmlNode child in htmlNode.ChildNodes)
+                {
+                    text.Append(GetChildText(child));
+                }
+            }
+ 
+            return text.ToString();
+        }
         
         private static string RemoveDiacritics(string text) 
         {
