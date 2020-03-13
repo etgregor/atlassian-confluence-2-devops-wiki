@@ -248,7 +248,7 @@ namespace Confluence2AzureDevOps.Processor
     
             if (htmlPage != null)
             {
-                RemoveInvalidNodes(htmlPage.DocumentNode.ChildNodes);
+                RemoveInvalidNodes(confluencePageRef.HtmlLocalFileName,  htmlPage.DocumentNode.ChildNodes);
                 
                 List<LinkElementInfo> linksOnPage = GetLinksElement(htmlPage.DocumentNode.ChildNodes);
                 
@@ -328,9 +328,8 @@ namespace Confluence2AzureDevOps.Processor
             return result;
         }
 
-        private void RemoveInvalidNodes(HtmlNodeCollection nodes)
+        private void RemoveInvalidNodes(string fileName, HtmlNodeCollection nodes)
         {
-            //head
             var nodesToRemove = new List<HtmlNode>();
 
             foreach (HtmlNode child in nodes)
@@ -343,9 +342,20 @@ namespace Confluence2AzureDevOps.Processor
                 {
                     nodesToRemove.Add(child);
                 }
+                else if (child.Name == "div" && HtmlUtils.TryGetCodeSnipped(child, out CodeSectionInfo codeSectionInfo))
+                {
+                    NotifyProcess($"Code section fount: {fileName}");
+                    NotifyProcess(codeSectionInfo.ToString());
+
+                    child.InnerHtml = codeSectionInfo.ToString();
+                }
+                else if(!child.HasChildNodes)
+                {
+                    child.InnerHtml = child.InnerHtml.Trim();
+                }
                 else if (child.HasChildNodes)
                 {
-                    RemoveInvalidNodes(child.ChildNodes);
+                    RemoveInvalidNodes(fileName, child.ChildNodes);
                 }
             }
 

@@ -88,6 +88,76 @@ namespace Confluence2AzureDevOps.Utils
 
             return linkReference;
         }
+
+        internal static bool TryGetCodeSnipped(HtmlNode htmlNode, out CodeSectionInfo codeSectionInfo)
+        {
+            bool isCodeSection = false;
+            codeSectionInfo = null;
+            
+            try
+            {
+                string hrefValue = htmlNode.GetAttributeValue("class", string.Empty);
+
+                if (!string.IsNullOrEmpty(hrefValue) && hrefValue.Contains("code panel"))
+                {
+
+                    if (htmlNode.HasChildNodes)
+                    {
+                        string header = string.Empty;
+                        string snippet = string.Empty;
+                        string codeLanguage = string.Empty;
+                            
+                        foreach (HtmlNode codeChild in htmlNode.ChildNodes)
+                        {
+                            string childClass = codeChild.GetAttributeValue("class", string.Empty);
+
+                            if (childClass.Contains("codeHeader"))
+                            {
+                                header = codeChild.InnerText;
+                            }
+                            else if (childClass.Contains("syntaxhighlighter-pre"))
+                            {
+                                codeLanguage = GetCodeFlavor(codeChild, out snippet);
+                            }
+                            else if (childClass.Contains("codeContent"))
+                            {
+                                foreach (HtmlNode grandSon in codeChild.ChildNodes)
+                                {
+                                    string subChildClass = grandSon.GetAttributeValue("class", string.Empty);
+                                    
+                                    if (subChildClass.Contains("syntaxhighlighter-pre"))
+                                    {
+                                        codeLanguage = GetCodeFlavor(grandSon, out snippet);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(snippet))
+                        {
+                            codeSectionInfo = new CodeSectionInfo
+                            {
+                                Header = header, 
+                                CodeSnippet = snippet, 
+                                Language = codeLanguage
+                            };
+
+                            isCodeSection = true;    
+                        }
+                        else
+                        {
+                            System.Diagnostics.Trace.TraceInformation("There is not code info");
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                isCodeSection = false;
+            }
+
+            return isCodeSection;
+        }
         
         /// <summary>
         /// Remove invalid chars to create valid file name according to:
@@ -116,12 +186,39 @@ namespace Confluence2AzureDevOps.Utils
 
             title = RemoveDiacritics(title);
 
-            //title = System.Web.HttpUtility.UrlEncode(title);
-            
             return title;
         }
+
+        private static string GetCodeFlavor(HtmlNode codeChild, out string codeSnippet)
+        {
+            string codeLanguage = string.Empty; 
+            
+            string syntaxHighlighter = codeChild.GetAttributeValue("data-syntaxhighlighter-params", string.Empty);
+
+            codeSnippet = codeChild.InnerText;
+            
+            if (!string.IsNullOrEmpty(syntaxHighlighter))
+            {
+                var values = syntaxHighlighter.Split(';');
+
+                var val = values.FirstOrDefault(p => p.StartsWith("brush"));
+
+                if (!string.IsNullOrEmpty(val))
+                {
+                    var ops = val.Split(':');
+
+                    if (ops.Length >= 1)
+                    {
+                        codeLanguage = ops[1];
+                    }
+                }
+            }
+
+            return codeLanguage;
+        }
         
-        static string RemoveDiacritics(string text) 
+        
+        private static string RemoveDiacritics(string text) 
         {
             var normalizedString = text.Normalize(NormalizationForm.FormD);
             var stringBuilder = new StringBuilder();
@@ -138,7 +235,7 @@ namespace Confluence2AzureDevOps.Utils
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        internal  static string RemoveMultiplesSpaces(string originalValue)
+        private  static string RemoveMultiplesSpaces(string originalValue)
         {
             if (string.IsNullOrEmpty(originalValue))
             {
