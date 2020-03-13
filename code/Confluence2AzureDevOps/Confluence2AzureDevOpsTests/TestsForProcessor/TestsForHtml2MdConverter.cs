@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Confluence2AzureDevOpsTests.TestsForProcessor
 {
+    [TestFixture]
     public class TestsForHtml2MdConverter
     {
         private Html2MdConverter _converter;
@@ -24,13 +25,13 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             _log = new StringBuilder();
             
             // Init test values.
-            LocalSettingTests setting = TestUtils.GetLocalSettings();
-
+            MigrationConfig config = TestUtils.GetMigrationConfigTest();
+            
             _testTransformId = $"TestTransform_{DateTime.Now:ddMMyyHHmmss}";
 
-            _workingDir =  Path.Combine(setting.LocalWikiDestinatioFolder, _testTransformId);
+            _workingDir =  Path.Combine(config.LocalConfig.LocalWorkspacePath, _testTransformId);
 
-            _converter = new Html2MdConverter(setting.LocalWikiSourceFolder, _workingDir);
+            _converter = new Html2MdConverter(config.LocalConfig.LocalConfluencePath, _workingDir);
 
             _converter.ProcessNotifier = WriteProcess;
         }
@@ -45,7 +46,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
 
                 string logPath = Path.Combine(_workingDir, "Log.txt");
                 
-                using (var writer = System.IO.File.CreateText(logPath))
+                using (var writer = File.CreateText(logPath))
                 {
                     writer.WriteLine(_log.ToString());
                 }

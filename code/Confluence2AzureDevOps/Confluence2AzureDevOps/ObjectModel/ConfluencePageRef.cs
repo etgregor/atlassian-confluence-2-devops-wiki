@@ -14,12 +14,17 @@ namespace Confluence2AzureDevOps.ObjectModel
         }
         
         public string HtmlTitle { get; set; }
-
+        
         /// <summary>
         /// Name of html file in local storage
         /// </summary>
         public string HtmlLocalFileName { get; set; }
 
+        // // /// <summary>
+        // // /// I's the name of page at azure wiki ( r
+        // // /// </summary>
+        // public string MarkDownTitle { get; set; }
+        
         /// <summary>
         /// Name of file that result from conversion from Html to Markdown
         /// </summary>

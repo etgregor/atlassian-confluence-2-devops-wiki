@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -123,15 +122,6 @@ namespace Confluence2AzureDevOps.Base
      
                          result = await ReadAsyncRemoteContent<T>(requestResult);
                      }
-//                     using (HttpClient client = CreateHttpClient(httpClientConfig))
-//                     {
-//                         using (var content = new ByteArrayContent(fileContent))
-//                         {    
-//                             content.Headers.ContentType = new MediaTypeHeaderValue(applicationType);
-//                             HttpResponseMessage requestResult = await client.PutAsync(url, content);
-//                             result = await ReadAsyncRemoteContent<T>(requestResult);
-//                         }
-//                     }
                  }
                  catch (UnautorizeApiException)
                  {
@@ -154,82 +144,6 @@ namespace Confluence2AzureDevOps.Base
                  return result;
              }
 
-//             /// <summary>
-//             /// Upload an file with HTTP Post
-//             /// </summary>
-//             /// <param name="url"></param>
-//             /// <param name="fieldNameOfFileInForm">The name for the HTTP content to add</param>
-//             /// <param name="filename">The file name for the HTTP content to add to the collection.</param>
-//             /// <param name="fileAsBites"></param>
-//             /// <param name="queryString"></param>
-//             /// <param name="formFiles"></param>
-//             /// <param name="clientConfig"></param>
-//             /// <typeparam name="T"></typeparam>
-//             /// <returns></returns>
-//             /// <exception cref="CallApiException"></exception>
-//             protected async Task<T> PutFile<T>(
-//                 string url,
-//                 string filename, 
-//                 byte[] fileAsBites,
-//                 string fieldNameOfFileInForm = null, 
-//                 Dictionary<string, string> queryString = null,  
-//                 Dictionary<string, string> formFiles = null, 
-//                 HttpClientConfig  clientConfig = null)
-//             {
-//                 T result;
-//     
-//                 try
-//                 {
-//                     url = CreateUrlWithParameters(url, queryString);
-//                     
-//                     using (HttpClient client = CreateHttpClient(clientConfig))
-//                     {
-//                         using (MultipartFormDataContent form = new MultipartFormDataContent())
-//                         { 
-//                             if (formFiles != null)
-//                             {
-//                                 foreach (var data in formFiles)
-//                                 {
-//                                     form.Add(new StringContent(data.Value), data.Key);
-//                                 }
-//                             }
-//
-//                             if (string.IsNullOrEmpty(fieldNameOfFileInForm))
-//                             {
-//                                 form.Add(new ByteArrayContent(fileAsBites, 0, fileAsBites.Length), filename);
-//                             }
-//                             else
-//                             {
-//                                 form.Add(new ByteArrayContent(fileAsBites, 0, fileAsBites.Length), fieldNameOfFileInForm, filename);    
-//                             }
-//     
-//                             HttpResponseMessage requestResult = await client.PutAsync(url, form);
-//                             
-//                             result = await ReadAsyncRemoteContent<T>(requestResult);
-//                         }
-//                     }
-//                 }
-//                 catch (UnautorizeApiException)
-//                 {
-//                     throw;
-//                 }
-//                 catch (ApiInvalidInputDataException)
-//                 {
-//                     throw;
-//                 }
-//                 catch (ApiException)
-//                 {
-//                     throw;
-//                 }
-//                 catch (Exception ex)
-//                 {
-//                     var callApiException = new CallApiException(UNKNOWN_API_EXCEPTION, ex);
-//                     throw callApiException;
-//                 }
-//     
-//                 return result;
-//             }
-             
              #endregion
              
              #region - Put -

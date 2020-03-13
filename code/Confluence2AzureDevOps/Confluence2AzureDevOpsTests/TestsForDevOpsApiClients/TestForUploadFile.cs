@@ -2,12 +2,14 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Confluence2AzureDevOps.DevOpsApiClient;
+using Confluence2AzureDevOps.ObjectModel;
 using Confluence2AzureDevOps.ObjectModel.WikiPages;
 using Confluence2AzureDevOpsTests.UtilsForTesting;
 using NUnit.Framework;
 
 namespace Confluence2AzureDevOpsTests.TestsForDevOpsApiClients
 {
+    [TestFixture]
     public class TestForAttachmentsApi
     {
         private AttachmentsApi _target;
@@ -16,13 +18,13 @@ namespace Confluence2AzureDevOpsTests.TestsForDevOpsApiClients
         public void Setup()
         {
             // Check internal code for test init.
-            DevOpsSettingsTests devOpsSetting = TestUtils.GetDevopsTestSettings();
+            MigrationConfig config = TestUtils.GetMigrationConfigTest();
 
             _target = new AttachmentsApi(
-                devOpsSetting.Organization, 
-                devOpsSetting.Project, 
-                devOpsSetting.WikiIdentifier, 
-                devOpsSetting.PersonalAccesToken);
+                config.AzureDevOpsConfig.Organization, 
+                config.AzureDevOpsConfig.Project, 
+                config.AzureDevOpsConfig.WikiIdentifier, 
+                config.AzureDevOpsConfig.PersonalAccessToken);
         }
         
         [Test]

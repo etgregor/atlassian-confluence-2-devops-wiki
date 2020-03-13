@@ -1,41 +1,31 @@
-namespace Confluence2AzureDevOps.ObjectModel
+namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
 {
-    public enum LinkResourceType
+    public class LinkElementInfo
     {
-        Unknown = 0,
-        ResourceOnSite,
-        Attachment,
-        ExternalLink
-    }
-    
-    public class LinkReference
-    {
-        public LinkReference()
+        public LinkElementInfo()
         {
         }
 
-        public LinkReference(string originalHref, string linkCaption)
+        public LinkElementInfo(string originalHref, string linkCaption, bool isImage = false)
         {
             LinkHref = originalHref;
             LinkCaption = linkCaption;
 
-            this.ResourceType = LinkResourceType.Unknown;
-
-            this.NewResourceLocation = originalHref;
+            ResourceType = ResourceType.Unknown;
             
             if (!string.IsNullOrEmpty(originalHref))
             {
                 if (originalHref.StartsWith("attachments"))
                 {
-                    ResourceType = LinkResourceType.Attachment;
+                    ResourceType = ResourceType.AttachmentLink;
                 }
                 else if (originalHref.StartsWith("http") || originalHref.StartsWith("https"))
                 {
-                    ResourceType = LinkResourceType.ExternalLink;
+                    ResourceType = ResourceType.ExternalLink;
                 }
                 else
                 {
-                    ResourceType = LinkResourceType.ResourceOnSite;
+                    ResourceType = ResourceType.PageExistsOnWiki;
                 }
             }
         }
@@ -50,7 +40,7 @@ namespace Confluence2AzureDevOps.ObjectModel
         /// </summary>
         public string LinkCaption { get; set; }
         
-        public LinkResourceType ResourceType { get; set; }
+        public ResourceType ResourceType { get; set; }
 
         public string NewResourceLocation { get; set; }
     }

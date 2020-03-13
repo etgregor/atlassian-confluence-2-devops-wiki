@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Confluence2AzureDevOpsTests.TestsForDevOpsApiClients
 {
+    [TestFixture]
     public class TestsForPagesApi
     {
         private PagesApi _target;
@@ -16,13 +17,13 @@ namespace Confluence2AzureDevOpsTests.TestsForDevOpsApiClients
         public void Setup()
         {
             // Check internal code for test init.
-            DevOpsSettingsTests devOpsSetting = TestUtils.GetDevopsTestSettings();
+            MigrationConfig config = TestUtils.GetMigrationConfigTest();
 
             _target = new PagesApi(
-                devOpsSetting.Organization, 
-                devOpsSetting.Project, 
-                devOpsSetting.WikiIdentifier, 
-                devOpsSetting.PersonalAccesToken);
+                config.AzureDevOpsConfig.Organization,
+                config.AzureDevOpsConfig.Project,
+                config.AzureDevOpsConfig.WikiIdentifier,
+                config.AzureDevOpsConfig.PersonalAccessToken);
         }
 
         [Test]

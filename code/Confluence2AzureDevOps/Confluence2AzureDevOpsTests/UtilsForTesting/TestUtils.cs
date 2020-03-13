@@ -1,52 +1,27 @@
+using System;
+using System.Text;
+using Confluence2AzureDevOps.ObjectModel;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Confluence2AzureDevOpsTests.UtilsForTesting
 {
     public static class TestUtils
     {
-        public static LocalSettingTests GetLocalSettings()
-        {
-            LocalSettingTests setting = new LocalSettingTests()
+        public static MigrationConfig GetMigrationConfigTest()
+        {            
+            string filePath = TestContext.Parameters["Confluence2DevopsFileConfigPath"];
+
+            if (string.IsNullOrEmpty(filePath))
             {
-                LocalWikiSourceFolder = TestContext.Parameters["localWikiSourceFolder"],
-                LocalWikiDestinatioFolder = TestContext.Parameters["localWikiDestinatioFolder"]
-            };
-            
-            return setting;
+                throw new Exception("Require config file.");
+            }
+
+            string configAsJson = System.IO.File.ReadAllText(filePath, Encoding.UTF8);
+
+            MigrationConfig fileContent = JsonConvert.DeserializeObject<MigrationConfig>(configAsJson);
+
+            return fileContent;
         }
-
-        public static DevOpsSettingsTests GetDevopsTestSettings()
-        {
-            DevOpsSettingsTests settingsTests = new DevOpsSettingsTests()
-            {
-                Organization = TestContext.Parameters["organization"],
-
-                Project = TestContext.Parameters["project"],
-
-                WikiIdentifier = TestContext.Parameters["wikiIdentifier"],
-
-                PersonalAccesToken = TestContext.Parameters["personalAccesToken"]
-            };
-
-            return settingsTests;
-        } 
-        
-    }
-
-    
-    
-    
-    
-    public class TestSettings
-    {
-        
-        
-//        _organization = TestContext.Parameters["organization"];
-//            
-//        _project = TestContext.Parameters["project"];
-//            
-//        _wikiIdentifier = TestContext.Parameters["wikiIdentifier"];
-//            
-//        _personalAccesToken = TestContext.Parameters["personalAccesToken"];
     }
 }
