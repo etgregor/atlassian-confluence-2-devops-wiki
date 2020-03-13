@@ -41,7 +41,10 @@ namespace Confluence2AzureDevOps.Processor
         /// </summary>
         private const string WIKI_RESULT_ATTACHMENT_FILES = ".attachments";
         
-        private const int AZURE_DEVOPS_MAX_PATH_LENGTH =235;
+        /// <summary>
+        /// Max length for path at azure dev ops, <see cref="https://docs.microsoft.com/en-us/azure/devops/project/wiki/wiki-file-structure?view=azure-devops"/> 
+        /// </summary>
+        private const int AZURE_DEV_OPS_MAX_PATH_LENGTH = 235;
         
         /// <summary>
         /// Folder with Html pages that exported from Confluence Cloud
@@ -194,9 +197,9 @@ namespace Confluence2AzureDevOps.Processor
                 
                 wikiPageInfo.PagePathAtAzureDevOps = $"{nodePath}/{wikiPageInfo.HtmlTitle}";
 
-                if (wikiPageInfo.PagePathAtAzureDevOps.Length > AZURE_DEVOPS_MAX_PATH_LENGTH)
+                if (wikiPageInfo.PagePathAtAzureDevOps.Length > AZURE_DEV_OPS_MAX_PATH_LENGTH)
                 {
-                    NotifyProcess($"WARN: Too long path ({AZURE_DEVOPS_MAX_PATH_LENGTH}): {wikiPageInfo.PagePathAtAzureDevOps}");
+                    NotifyProcess($"WARN: Too long path ({AZURE_DEV_OPS_MAX_PATH_LENGTH}): {wikiPageInfo.PagePathAtAzureDevOps}");
                 }
             }
             else
@@ -380,7 +383,6 @@ namespace Confluence2AzureDevOps.Processor
                 var converter = new ReverseMarkdown.Converter();
                 
                 // replace special chars
-                // htmlOuterDocument = htmlOuterDocument.Replace("<br>", " ");
                 string mdFileContent = converter.Convert(htmlOuterDocument);
                 
                 mdFileContent = mdFileContent.Replace("<br>", " ");
