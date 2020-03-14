@@ -57,6 +57,8 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
 
         internal const string CSS_CLASS_FOR_TABLE_CONTENT = "table-wrap";
         
+        internal const string CSS_CLASS_FOR_FOOTER = "footer-body";
+        
         #region - HTML item names -
 
         /// <summary>
@@ -78,17 +80,9 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         /// Name of TABLE control element
         /// </summary>
         internal const string HTML_TABLE = "table";
+        
+        internal const string HTML_SECTION = "section";
 
         #endregion
-        
-        /// <summary>
-        /// Replaceable tag by:  #, it will looks like: [Custom foo description](#foo)
-        /// </summary>
-        internal const string INTERNAL_LINK_TO_SECTION = "GGGINTERNLINKTOSECTIONGGG";
-        
-        /// <summary>
-        /// Replaceable tag by tag:  ####, it will looks like: #### Foo
-        /// </summary>
-        internal const string INTERNAL_SECTION = "GGGINTERNSECTIONGGG";
     }
 }

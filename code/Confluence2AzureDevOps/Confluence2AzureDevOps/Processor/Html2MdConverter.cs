@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Confluence2AzureDevOps.Base.CustomExceptions;
 using Confluence2AzureDevOps.ObjectModel;
 using Confluence2AzureDevOps.ObjectModel.HtmlElements;
@@ -340,41 +341,44 @@ namespace Confluence2AzureDevOps.Processor
         {
             var elementsToRemove = new List<HtmlNode>();
 
-            foreach (HtmlNode child in nodes)
+            foreach (HtmlNode nodeToAnalyze in nodes)
             {
-                if (string.Equals(child.Name, HtmlConstants.HTML_SCRIPT)  
-                    || string.Equals(child.Name, HtmlConstants.HTML_HEAD))
+                if (string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_SCRIPT)  
+                    || string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_HEAD))
                 {
-                    elementsToRemove.Add(child);
+                    elementsToRemove.Add(nodeToAnalyze);
                 }
-                else if (string.Equals(child.Name, HtmlConstants.HTML_DIV) 
-                         && HtmlUtils.ContainsTableElement(child, out HtmlNode tableNode))
+                else if (string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_DIV) 
+                         && HtmlUtils.ContainsTableElement(nodeToAnalyze, out HtmlNode tableNode))
                 {
-                    // Process element only if is unique child
-                    //HtmlNode tableNode = child.FirstChild;
                     var cleaner = new HtmlTableCleaner(tableNode);
-                    child.InnerHtml = cleaner.GetTableDefinition();
+                    nodeToAnalyze.InnerHtml = cleaner.GetTableDefinition();
                 }
-                else if (string.Equals(child.Name,  HtmlConstants.HTML_DIV) &&
-                         HtmlUtils.TryGetCodeSnipped(child, out CodeSectionInfo codeSectionInfo))
+                else if (string.Equals(nodeToAnalyze.Name,  HtmlConstants.HTML_DIV) &&
+                         HtmlUtils.TryGetCodeSnipped(nodeToAnalyze, out CodeSectionInfo codeSectionInfo))
                 {
                     // Formatting code sections
-                    child.InnerHtml = codeSectionInfo.ToString();
+                    nodeToAnalyze.InnerHtml = codeSectionInfo.ToString();
                 }
-                else if (string.Equals(child.Name, HtmlConstants.HTML_DIV) 
-                         && HtmlUtils.TryGetMetadataInfo(child, out string metadata))
+                else if (string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_DIV) 
+                         && HtmlUtils.TryGetMetadataInfo(nodeToAnalyze, out string metadata))
                 {
                     // replace metadata file
-                    child.InnerHtml = metadata;
+                    nodeToAnalyze.InnerHtml = metadata;
                 }
-                else if (!child.HasChildNodes)
+                else if (!nodeToAnalyze.HasChildNodes)
                 {
                     // Remove multiples black spaces
-                    child.InnerHtml = child.InnerHtml.Trim();
+                    nodeToAnalyze.InnerHtml = nodeToAnalyze.InnerHtml.Trim();
                 }
-                else if (child.HasChildNodes)
+                else if(string.Equals(nodeToAnalyze.Name,  HtmlConstants.HTML_SECTION) 
+                        && HtmlUtils.IdentifyElementType(nodeToAnalyze) == HtmlSectionType.FooterSection)
+                {  
+                    elementsToRemove.Add(nodeToAnalyze);
+                }
+                else if (nodeToAnalyze.HasChildNodes)
                 {
-                    ApplyCustomConversions(confluencePageRef, child.ChildNodes);
+                    ApplyCustomConversions(confluencePageRef, nodeToAnalyze.ChildNodes);
                 }
             }
 
@@ -392,17 +396,23 @@ namespace Confluence2AzureDevOps.Processor
             if (!string.IsNullOrEmpty(confluencePageRef.MarkdownLocalFilename))
             {
                 var converter = new ReverseMarkdown.Converter();
+                StringBuilder mdFileContent = new StringBuilder(converter.Convert(htmlOuterDocument));
                 
-                // replace special chars
-                string mdFileContent = converter.Convert(htmlOuterDocument);
+                var valuesToReplace = new Dictionary<string, string>()
+                {
+                    {"<br>", " "},
+                    {HtmlConstants.NEW_LINE, "\n"},
+                    {HtmlConstants.BOLD_STILE, "**"},
+                    {HtmlConstants.ITALIC_STILE, "_"}
+                };
                 
-                mdFileContent = mdFileContent.Replace("<br>", " ");
-                mdFileContent = mdFileContent.Replace(HtmlConstants.NEW_LINE, "\n");
-                mdFileContent = mdFileContent.Replace(HtmlConstants.BOLD_STILE, "**");
-                mdFileContent = mdFileContent.Replace(HtmlConstants.ITALIC_STILE, "_");
-                // mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_LINK_TO_SECTION, "#");
-                // mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_SECTION, "#####");
-                // mdFileContent = HtmlUtils.RemoveMultiplesSpaces(mdFileContent);
+                foreach (string k in valuesToReplace.Keys)
+                {
+                    mdFileContent.Replace(k, valuesToReplace[k]);
+                }
+               
+                mdFileContent.Append(
+                    $"\n_Migrate on {DateTime.Now:f} with [Atlassian2DevOps Tool](https://github.com/etgregor/atlassian2devops)._");
                 
                 string fileDestinyFullPath = Path.Combine(_resultDir, confluencePageRef.MarkdownLocalFilename);
 
@@ -410,7 +420,7 @@ namespace Confluence2AzureDevOps.Processor
 
                 if (string.IsNullOrEmpty(fileExists))
                 {
-                    IoUtils.SaveFile(fileDestinyFullPath, mdFileContent);
+                    IoUtils.SaveFile(fileDestinyFullPath, mdFileContent.ToString());
                 }
                 else
                 {

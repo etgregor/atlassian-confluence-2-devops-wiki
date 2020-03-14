@@ -199,7 +199,7 @@ namespace Confluence2AzureDevOps.Utils
 
                     if (!string.IsNullOrEmpty(metadataValue))
                     {
-                        metadata = $"{HtmlConstants.ITALIC_STILE} {metadataValue.Trim()} (MD Created: {DateTime.Now:f}) {HtmlConstants.ITALIC_STILE}";
+                        metadata = $"{HtmlConstants.ITALIC_STILE}{metadataValue.Trim()},{HtmlConstants.ITALIC_STILE}";
                     }
 
                     isMetadata = true;
@@ -251,7 +251,7 @@ namespace Confluence2AzureDevOps.Utils
             return isTableElement;
         }
 
-        private static HtmlSectionType IdentifyElementType(HtmlNode htmlNode)
+        internal static HtmlSectionType IdentifyElementType(HtmlNode htmlNode)
         {
             HtmlSectionType type = HtmlSectionType.NotIdentified;
 
@@ -272,6 +272,10 @@ namespace Confluence2AzureDevOps.Utils
                     else if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_TABLE_CONTENT))
                     {
                         type = HtmlSectionType.TableSection;
+                    }
+                    else if (cssClassValue.Contains(HtmlConstants.CSS_CLASS_FOR_FOOTER))
+                    {
+                        type = HtmlSectionType.FooterSection;
                     }
                 }
             }
