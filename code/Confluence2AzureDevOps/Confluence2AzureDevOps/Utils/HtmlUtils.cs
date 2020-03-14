@@ -199,7 +199,7 @@ namespace Confluence2AzureDevOps.Utils
 
                     if (!string.IsNullOrEmpty(metadataValue))
                     {
-                        metadata = $"{HtmlConstants.ITALIC_STILE}{metadataValue.Trim()},{HtmlConstants.ITALIC_STILE}";
+                        metadata = $"{HtmlConstants.ITALIC_STILE}{metadataValue.Trim()}{HtmlConstants.ITALIC_STILE}";
                     }
 
                     isMetadata = true;
@@ -371,7 +371,7 @@ namespace Confluence2AzureDevOps.Utils
             }
             else
             {
-                text.AppendFormat("{0}, ", htmlNode.InnerText.Trim());
+                text.AppendFormat("{0} ", htmlNode.InnerText.Trim());
             }
             
             return text.ToString();
