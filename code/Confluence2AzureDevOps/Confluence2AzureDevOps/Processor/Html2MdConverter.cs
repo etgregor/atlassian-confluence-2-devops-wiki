@@ -65,6 +65,8 @@ namespace Confluence2AzureDevOps.Processor
         private string _indexFileFullPath;
 
         private int _captionNotSetCount;
+        
+        private int _internalRefCountNumber;
  
         public BmlProcessNotifier ProcessNotifier { get; set; }
         
@@ -100,7 +102,9 @@ namespace Confluence2AzureDevOps.Processor
                 
             _linkReferences = new Dictionary<string, List<LinkElementInfo>>();
 
-            _captionNotSetCount = 0;
+            _captionNotSetCount = 1;
+            
+            _internalRefCountNumber = 1;
         }
         
         /// <summary>
@@ -346,34 +350,39 @@ namespace Confluence2AzureDevOps.Processor
                 if (string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_SCRIPT)  
                     || string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_HEAD))
                 {
+                    // script, head
                     elementsToRemove.Add(nodeToAnalyze);
                 }
                 else if (string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_DIV) 
                          && HtmlUtils.ContainsTableElement(nodeToAnalyze, out HtmlNode tableNode))
                 {
-                    var cleaner = new HtmlTableCleaner(tableNode);
+                    // table
+                    var cleaner = new HtmlTableCleaner(tableNode, _internalRefCountNumber);
                     nodeToAnalyze.InnerHtml = cleaner.GetTableDefinition();
+
+                    _internalRefCountNumber = cleaner.InternalRefCount + 1;
                 }
                 else if (string.Equals(nodeToAnalyze.Name,  HtmlConstants.HTML_DIV) &&
                          HtmlUtils.TryGetCodeSnipped(nodeToAnalyze, out CodeSectionInfo codeSectionInfo))
                 {
-                    // Formatting code sections
+                    // code
                     nodeToAnalyze.InnerHtml = codeSectionInfo.ToString();
                 }
                 else if (string.Equals(nodeToAnalyze.Name, HtmlConstants.HTML_DIV) 
                          && HtmlUtils.TryGetMetadataInfo(nodeToAnalyze, out string metadata))
                 {
-                    // replace metadata file
+                    // metadata
                     nodeToAnalyze.InnerHtml = metadata;
                 }
                 else if (!nodeToAnalyze.HasChildNodes)
                 {
                     // Remove multiples black spaces
-                    nodeToAnalyze.InnerHtml = nodeToAnalyze.InnerHtml.Trim();
+                    nodeToAnalyze.InnerHtml = HtmlUtils.RemoveMultiplesSpaces(nodeToAnalyze.InnerHtml);
                 }
                 else if(string.Equals(nodeToAnalyze.Name,  HtmlConstants.HTML_SECTION) 
                         && HtmlUtils.IdentifyElementType(nodeToAnalyze) == HtmlSectionType.FooterSection)
                 {  
+                    // footer
                     elementsToRemove.Add(nodeToAnalyze);
                 }
                 else if (nodeToAnalyze.HasChildNodes)

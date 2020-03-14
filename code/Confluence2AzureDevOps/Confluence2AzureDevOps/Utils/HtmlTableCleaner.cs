@@ -10,13 +10,22 @@ namespace Confluence2AzureDevOps.Utils
 
         private StringBuilder cildContents;
 
-        private int _internalRefCount = 0;
+        private int _internalRefCount;
         
-        public HtmlTableCleaner(HtmlNode htmlItem)
+        /// <summary>
+        /// increment ref count for create titles
+        /// </summary>
+        public int InternalRefCount {
+            get { return _internalRefCount; }
+        }
+        
+        public HtmlTableCleaner(HtmlNode htmlItem, int refCount)
         {
             _htmlItem = htmlItem;
             
             cildContents = new StringBuilder();
+
+            _internalRefCount = refCount;
         }
 
         public string GetTableDefinition()

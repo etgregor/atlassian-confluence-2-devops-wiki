@@ -371,7 +371,7 @@ namespace Confluence2AzureDevOps.Utils
             }
             else
             {
-                text.AppendFormat(htmlNode.InnerText.Trim(), ",");
+                text.AppendFormat("{0}, ", htmlNode.InnerText.Trim());
             }
             
             return text.ToString();
