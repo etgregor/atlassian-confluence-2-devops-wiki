@@ -37,24 +37,26 @@ namespace Confluence2AzureDevOps.Utils
                     if (string.Equals(child.Name, HtmlConstants.HTML_DIV) 
                              && HtmlUtils.ContainsTableElement(child, out HtmlNode tableNode))
                     {
-                        // add move section: #### Foo
-                        child.InnerHtml = $"{HtmlConstants.NEW_LINE} {HtmlConstants.INTERNAL_SECTION} See SubTable{_internalRefCount} {HtmlConstants.NEW_LINE}";
-                        
                         //[Custom foo description](#foo)
-                        cildContents.Append($"{HtmlConstants.NEW_LINE} {HtmlConstants.INTERNAL_LINK_TO_SECTION} SubTable{_internalRefCount} {HtmlConstants.NEW_LINE}");
+                        cildContents.Append($"{HtmlConstants.NEW_LINE} #### SubTable{_internalRefCount} {HtmlConstants.NEW_LINE}");
                         cildContents.Append(tableNode.OuterHtml);
+                        cildContents.Append(HtmlConstants.NEW_LINE);
+                        
+                        // add move section: #### Foo
+                        tableNode.InnerHtml = $" [See SubTable{_internalRefCount}](#SubTable{_internalRefCount}) ";
                         
                         _internalRefCount++;
                     }
                     else if (string.Equals(child.Name,  HtmlConstants.HTML_DIV) &&
                              HtmlUtils.TryGetCodeSnipped(child, out CodeSectionInfo codeSectionInfo))
                     {
-                        // add move section: #### Foo
-                        child.InnerHtml = $"{HtmlConstants.NEW_LINE} {HtmlConstants.INTERNAL_SECTION} See Code{_internalRefCount} {HtmlConstants.NEW_LINE}";
-                        
                         //[Custom foo description](#foo)
-                        cildContents.Append($"{HtmlConstants.NEW_LINE} {HtmlConstants.INTERNAL_LINK_TO_SECTION} Code{_internalRefCount} {HtmlConstants.NEW_LINE}");
+                        cildContents.Append($"{HtmlConstants.NEW_LINE} #### Code{_internalRefCount} {HtmlConstants.NEW_LINE}");
                         cildContents.Append(codeSectionInfo);
+                        cildContents.Append(HtmlConstants.NEW_LINE);
+                        
+                        // add move section: #### Foo
+                        child.InnerHtml = $"[See Code{_internalRefCount}](#Code{_internalRefCount})";
                         
                         _internalRefCount++;    
                     }

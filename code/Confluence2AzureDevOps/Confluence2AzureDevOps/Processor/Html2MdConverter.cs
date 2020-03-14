@@ -361,7 +361,8 @@ namespace Confluence2AzureDevOps.Processor
                     // Formatting code sections
                     child.InnerHtml = codeSectionInfo.ToString();
                 }
-                else if (string.Equals(child.Name, HtmlConstants.HTML_DIV) && HtmlUtils.TryGetMetadataInfo(child, out string metadata))
+                else if (string.Equals(child.Name, HtmlConstants.HTML_DIV) 
+                         && HtmlUtils.TryGetMetadataInfo(child, out string metadata))
                 {
                     // replace metadata file
                     child.InnerHtml = metadata;
@@ -399,8 +400,8 @@ namespace Confluence2AzureDevOps.Processor
                 mdFileContent = mdFileContent.Replace(HtmlConstants.NEW_LINE, "\n");
                 mdFileContent = mdFileContent.Replace(HtmlConstants.BOLD_STILE, "**");
                 mdFileContent = mdFileContent.Replace(HtmlConstants.ITALIC_STILE, "_");
-                mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_LINK_TO_SECTION, "#");
-                mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_SECTION, "#####");
+                // mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_LINK_TO_SECTION, "#");
+                // mdFileContent = mdFileContent.Replace(HtmlConstants.INTERNAL_SECTION, "#####");
                 // mdFileContent = HtmlUtils.RemoveMultiplesSpaces(mdFileContent);
                 
                 string fileDestinyFullPath = Path.Combine(_resultDir, confluencePageRef.MarkdownLocalFilename);

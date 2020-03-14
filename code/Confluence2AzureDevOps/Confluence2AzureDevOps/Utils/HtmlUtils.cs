@@ -199,7 +199,7 @@ namespace Confluence2AzureDevOps.Utils
 
                     if (!string.IsNullOrEmpty(metadataValue))
                     {
-                        metadata = $"{HtmlConstants.ITALIC_STILE}{metadataValue.Trim()}{HtmlConstants.ITALIC_STILE}";
+                        metadata = $"{HtmlConstants.ITALIC_STILE} {metadataValue.Trim()} (MD Created: {DateTime.Now:f}) {HtmlConstants.ITALIC_STILE}";
                     }
 
                     isMetadata = true;
@@ -358,11 +358,6 @@ namespace Confluence2AzureDevOps.Utils
         {
             var text = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(htmlNode.InnerText))
-            {
-                text.AppendFormat(htmlNode.InnerText.Trim(), ",");
-            }
-
             if (htmlNode.HasChildNodes)
             {
                 foreach (HtmlNode child in htmlNode.ChildNodes)
@@ -370,7 +365,11 @@ namespace Confluence2AzureDevOps.Utils
                     text.Append(GetChildText(child));
                 }
             }
-
+            else
+            {
+                text.AppendFormat(htmlNode.InnerText.Trim(), ",");
+            }
+            
             return text.ToString();
         }
 
