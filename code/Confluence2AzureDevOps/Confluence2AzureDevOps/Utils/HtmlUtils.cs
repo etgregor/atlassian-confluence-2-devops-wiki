@@ -89,11 +89,11 @@ namespace Confluence2AzureDevOps.Utils
             {
                 string hrefValue = htmlNode.GetAttributeValue("src", string.Empty);
 
-                var uri = new Uri(hrefValue);
+                //var uri = new Uri(hrefValue);
 
-                string path = uri.GetLeftPart(UriPartial.Path);
+                //string path = uri.GetLeftPart(UriPartial.Path);
 
-                linkReference = new LinkElementInfo(path, string.Empty);
+                linkReference = new LinkElementInfo(hrefValue, string.Empty);
             }
             catch (Exception e)
             {

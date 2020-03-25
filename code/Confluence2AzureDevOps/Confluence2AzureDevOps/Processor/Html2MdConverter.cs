@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,7 +55,7 @@ namespace Confluence2AzureDevOps.Processor
         
         private readonly string _rootWorkingDir;
 
-        private readonly string _originalHtmlDir;
+        private readonly string _backupHtmlDir;
         
         private readonly string _processedHtmlDir;
         
@@ -73,6 +74,8 @@ namespace Confluence2AzureDevOps.Processor
         private ConfluencePageRef _wikiMenu;
 
         private readonly Dictionary<string, List<LinkElementInfo>> _linkReferences;
+
+        private Dictionary<string, string> _replazableTitles;
         
         /// <summary>
         /// Init converter
@@ -83,7 +86,8 @@ namespace Confluence2AzureDevOps.Processor
         /// - "WikiMd/" folder for conversion result
         /// - "WikiMd/.attachments/" folder for attachments files
         /// </param>
-        public Html2MdConverter(string htmlSourceFolder, string mdWorkingDirectory)
+        /// <param name="replazableTitles">it can use for replace long titles</param>
+        public Html2MdConverter(string htmlSourceFolder, string mdWorkingDirectory, Dictionary<string, string> replazableTitles = null)
         {
             Guard.PreventStringEmpty("htmlSourceFolder", htmlSourceFolder);
             Guard.PreventStringEmpty("mdDestinationFolder", mdWorkingDirectory);
@@ -92,7 +96,9 @@ namespace Confluence2AzureDevOps.Processor
             
             _rootWorkingDir = mdWorkingDirectory;
 
-            _originalHtmlDir = Path.Combine(mdWorkingDirectory, WIKI_ORIGINAL_HTML_FILES);
+            _replazableTitles = replazableTitles;
+            
+            _backupHtmlDir = Path.Combine(mdWorkingDirectory, WIKI_ORIGINAL_HTML_FILES);
 
             _processedHtmlDir = Path.Combine(mdWorkingDirectory, WIKI_PROCESSED_HTML_FILES);
             
@@ -105,6 +111,11 @@ namespace Confluence2AzureDevOps.Processor
             _captionNotSetCount = 1;
             
             _internalRefCountNumber = 1;
+
+            if (_replazableTitles == null)
+            {
+                _replazableTitles = new Dictionary<string, string>();
+            }
         }
         
         /// <summary>
@@ -116,7 +127,9 @@ namespace Confluence2AzureDevOps.Processor
         /// <exception cref="GenericC2AException">When something is wrong</exception>
         public ConfluencePageRef ConvertHtmlToMdFiles(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
         {
-            ValidateInitialInput(confluenceIndexFile);
+            Guard.PreventDirectoryNotExistt(_htmlSourceFolder);
+
+            _indexFileFullPath = GetFullPathIndexPage(confluenceIndexFile);
             
             CreateOutputDirs();
             
@@ -126,7 +139,7 @@ namespace Confluence2AzureDevOps.Processor
             
             WriteJsonObject("_InitialMigrationTreeInfo.json", _wikiMenu);
             
-            PreprocessHtmlFile(_wikiMenu);
+            ProcessHtmlFile(_wikiMenu);
             
             WriteJsonObject("_LinkReferences.json", _linkReferences);
             
@@ -135,26 +148,26 @@ namespace Confluence2AzureDevOps.Processor
 
         #region - Initial -
 
-         private void ValidateInitialInput(string confluenceIndexFile)
-                {
-                    Guard.PreventDirectoryNotExistt(_htmlSourceFolder);
-                    
-                    _indexFileFullPath = IoUtils.GetPathIfFileExists(_htmlSourceFolder, confluenceIndexFile);
-                    
-                    if (string.IsNullOrEmpty(_indexFileFullPath))
-                    {
-                        throw new GenericC2AException(
-                            $"{confluenceIndexFile} is required and not exists at {_htmlSourceFolder}");
-                    }
-                }
-        
-                private void CreateOutputDirs()
-                {
-                    IoUtils.CreateFolderPath(_originalHtmlDir);
-                    IoUtils.CreateFolderPath(_processedHtmlDir);
-                    IoUtils.CreateFolderPath(_resultDir);
-                    IoUtils.CreateFolderPath(_resultAttachmentsDir);
-                }
+        private string GetFullPathIndexPage(string confluenceIndexFile)
+        {
+            string indexFileFullPath = IoUtils.GetPathIfFileExists(_htmlSourceFolder, confluenceIndexFile);
+
+            if (string.IsNullOrEmpty(indexFileFullPath))
+            {
+                throw new GenericC2AException(
+                    $"{confluenceIndexFile} is required and not exists at {_htmlSourceFolder}");
+            }
+
+            return indexFileFullPath;
+        }
+
+        private void CreateOutputDirs()
+        {
+            IoUtils.CreateFolderPath(_backupHtmlDir);
+            IoUtils.CreateFolderPath(_processedHtmlDir);
+            IoUtils.CreateFolderPath(_resultDir);
+            IoUtils.CreateFolderPath(_resultAttachmentsDir);
+        }
 
 
         #endregion
@@ -179,14 +192,20 @@ namespace Confluence2AzureDevOps.Processor
 
             List<ConfluencePageRef> nodes = GetPageInfoFromHtmlLinkElement(bodyNode.ChildNodes);
 
-            wikiMainPage = nodes.FirstOrDefault();
-
+            string mainFile = Path.GetFileName(_indexFileFullPath);
+            
+            wikiMainPage = new ConfluencePageRef();
+            wikiMainPage.HtmlTitle = "Home";
+            wikiMainPage.HtmlLocalFileName = mainFile;
+            wikiMainPage.SubPages.AddRange(nodes);
+            //wikiMainPage = nodes.FirstOrDefault();
+            //_replazableTitles
             if (wikiMainPage == null)
             {
                 throw new GenericC2AException($"Can't get the confluence page index from: {_indexFileFullPath}");
             }
 
-            wikiMainPage.HtmlTitle = "Home";
+            //wikiMainPage.HtmlTitle = "Home";
             
             return wikiMainPage;
         }
@@ -198,7 +217,10 @@ namespace Confluence2AzureDevOps.Processor
             if (!string.IsNullOrEmpty(fileTitleDevOps))
             {
                 wikiPageInfo.PageTitleAtAzureDevOps = fileTitleDevOps;
-                wikiPageInfo.MarkdownLocalFilename = $"{fileTitleDevOps}.md";
+
+                var htmlFileName = System.IO.Path.GetFileNameWithoutExtension(wikiPageInfo.HtmlLocalFileName);
+                
+                wikiPageInfo.MarkdownLocalFilename = $"{htmlFileName}.md";
                 
                 wikiPageInfo.PagePathAtAzureDevOps = $"{nodePath}/{wikiPageInfo.HtmlTitle}";
 
@@ -233,38 +255,95 @@ namespace Confluence2AzureDevOps.Processor
 
             return pageTitle;
         }
+        
+        private List<ConfluencePageRef> GetPageInfoFromHtmlLinkElement(HtmlNodeCollection nodes)
+        {
+            var result = new List<ConfluencePageRef>();
+
+            ConfluencePageRef newNode = null;
+            
+            foreach (HtmlNode child in nodes)
+            {
+                if (child.Name == HtmlConstants.HTML_A)
+                {
+                    LinkElementInfo linkRef = HtmlUtils.GetLinkInfo(child);
+
+                    if (linkRef != null)
+                    {
+                        if (string.IsNullOrEmpty(linkRef.Caption))
+                        {
+                            linkRef.Caption = $"{CAPTION_NOT_SET}_{_captionNotSetCount}";
+                            _captionNotSetCount++;
+                        }
+
+                        if (_replazableTitles.TryGetValue(linkRef.Caption, out string newCaption))
+                        {
+                            linkRef.Caption = newCaption;
+                        }
+                        
+                        newNode = new ConfluencePageRef()
+                        {
+                            HtmlTitle = linkRef.Caption,
+                            HtmlLocalFileName = linkRef.OriginalRef
+                        };
+                    }
+                    
+                    result.Add(newNode);
+                }
+                else if (child.HasChildNodes)
+                {
+                    List<ConfluencePageRef> childrenNodes = GetPageInfoFromHtmlLinkElement(child.ChildNodes);
+                    
+                    if (newNode != null)
+                    {
+                        newNode.SubPages.AddRange(childrenNodes);
+                    }
+                    else
+                    {
+                        result.AddRange(childrenNodes);
+                    }
+                }
+            }
+
+            return result;
+        }
 
         #endregion
 
         #region - Preprocesing file-
 
-        private void PreprocessHtmlFile(ConfluencePageRef wikiPageInfo)
-        {
-            PrepareHtmlFile(wikiPageInfo);
-
-            foreach (ConfluencePageRef subPage in wikiPageInfo.SubPages)
-            {
-                PreprocessHtmlFile(subPage);
-            }
-        }
-
-        public void PrepareHtmlFile(ConfluencePageRef confluencePageRef)
+        public void ProcessHtmlFile(ConfluencePageRef confluencePageRef)
         {
             HtmlDocument htmlPage = ReadOriginalFileAsHtml(confluencePageRef.HtmlLocalFileName);
-    
+
             if (htmlPage != null)
             {
-                ApplyCustomConversions(confluencePageRef,  htmlPage.DocumentNode.ChildNodes);
+                NotifyProcess($"        ======== Start processing: {confluencePageRef.HtmlLocalFileName} ========");
                 
+                ApplyCustomConversions(htmlPage.DocumentNode.ChildNodes);
+
                 List<LinkElementInfo> linksOnPage = GetLinksElement(htmlPage.DocumentNode.ChildNodes);
-                
+  
                 _linkReferences.Add(confluencePageRef.HtmlLocalFileName, linksOnPage);
 
                 string preprocessedHtml = Path.Combine(_processedHtmlDir, confluencePageRef.HtmlLocalFileName);
-                
+
+                // processed html file
                 htmlPage.Save(preprocessedHtml);
 
-                ConvertHtml2Markdown2(confluencePageRef, htmlPage.DocumentNode.OuterHtml);
+                var htmlContent = new StringBuilder();
+                htmlContent.Append(htmlPage.DocumentNode.OuterHtml);
+
+                htmlContent = ReplaceLinks(confluencePageRef, htmlContent);
+                
+                ConvertHtml2Markdown2(confluencePageRef, htmlContent.ToString());
+                
+                NotifyProcess($"        ======== End processing: {confluencePageRef.HtmlLocalFileName} ========");
+            }
+            
+            foreach (ConfluencePageRef subPage in confluencePageRef.SubPages)
+            {
+                ProcessHtmlFile(subPage);
             }
         }
 
@@ -341,7 +420,7 @@ namespace Confluence2AzureDevOps.Processor
             return result;
         }
 
-        private void ApplyCustomConversions(ConfluencePageRef confluencePageRef, HtmlNodeCollection nodes)
+        private void ApplyCustomConversions(HtmlNodeCollection nodes)
         {
             var elementsToRemove = new List<HtmlNode>();
 
@@ -387,7 +466,7 @@ namespace Confluence2AzureDevOps.Processor
                 }
                 else if (nodeToAnalyze.HasChildNodes)
                 {
-                    ApplyCustomConversions(confluencePageRef, nodeToAnalyze.ChildNodes);
+                    ApplyCustomConversions(nodeToAnalyze.ChildNodes);
                 }
             }
 
@@ -397,9 +476,123 @@ namespace Confluence2AzureDevOps.Processor
                 nodes.Remove(htmlNode);
             }
         }
+
+        private StringBuilder ReplaceLinks(ConfluencePageRef pageRef, StringBuilder originalText)
+        {
+            try
+            {
+                if (this._linkReferences.TryGetValue(pageRef.HtmlLocalFileName, out List<LinkElementInfo> links))
+                {
+                    foreach (LinkElementInfo link in links)
+                    {
+                        if (string.IsNullOrEmpty(link.OriginalRef))
+                        {
+                            continue;
+                        }
+
+                        switch (link.ResourceType)
+                        {
+                            case ResourceType.AttachmentLink:
+
+                                //string tempUrl;
+                                Uri actualUri;
+                            
+                                if (!link.OriginalRef.StartsWith("http"))
+                                {
+                                    actualUri = new Uri($"http://localhost/{link.OriginalRef}");
+                                }
+                                else
+                                {
+                                    actualUri = new Uri(link.OriginalRef);
+                                }
+
+                                string absolutePath = actualUri.AbsolutePath;
+
+                                var elements = new List<string>();
+                                elements.Add(_htmlSourceFolder);
+                                elements.AddRange(absolutePath.Split('/'));
+                                string originalFilePath = Path.Combine(elements.ToArray());
+                                
+                                string fileName = Path.GetFileName(link.OriginalRef);
+
+                                string finalPath = Path.Combine(".attachments", fileName);
+                            
+                                string finalAttachmentPath = Path.Combine(_resultDir, finalPath);
+
+                                if (System.IO.File.Exists(originalFilePath))
+                                {
+                                    File.Copy(originalFilePath, finalAttachmentPath, true);    
+                                }
+                                else
+                                {
+                                    NotifyProcess($"WARN: file not exists: {originalFilePath}");
+                                }
+                                
+                                originalText.Replace(link.OriginalRef, finalPath);
+
+                                link.NewRef = finalPath;
+                                break;
+                            case ResourceType.PageExistsOnWiki:
+                                //string actualLink = Path.GetFileName(link.OriginalRef);
+
+                                ConfluencePageRef pageInfo = null;
+                                
+                                if (string.Equals(_wikiMenu.HtmlLocalFileName, link.OriginalRef))
+                                {    
+                                    pageInfo = _wikiMenu;
+                                }
+
+                                if (pageInfo == null)
+                                {
+                                    pageInfo = GetPageInfoFromMenu(_wikiMenu.SubPages, link.OriginalRef);
+                                }
+                            
+                                if(pageInfo != null)
+                                {
+                                    originalText.Replace(link.OriginalRef, pageInfo.PagePathAtAzureDevOps);
+                                    link.NewRef = pageInfo.PagePathAtAzureDevOps;
+                                }
+                                else
+                                {
+                                    NotifyProcess($"WARN: Missing link  '{link.OriginalRef}'");
+                                }
+                            
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw new GenericC2AException($"Can't replace links into", e);
+            }
+
+            return originalText;
+        }
         
-        #endregion
-       
+        private ConfluencePageRef GetPageInfoFromMenu(List<ConfluencePageRef> subPages, string searchedPage)
+        {
+            ConfluencePageRef linkInfo = subPages.FirstOrDefault(p => string.Equals(p.HtmlLocalFileName, searchedPage));
+
+            if (linkInfo == null)
+            {
+                foreach (ConfluencePageRef subPage in subPages)
+                {
+                    if (subPage.SubPages.Any())
+                    {
+                        linkInfo = GetPageInfoFromMenu(subPage.SubPages, searchedPage);
+
+                        if (linkInfo != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return linkInfo;
+        }
+
         private void ConvertHtml2Markdown2(ConfluencePageRef confluencePageRef, string htmlOuterDocument)
         {
             if (!string.IsNullOrEmpty(confluencePageRef.MarkdownLocalFilename))
@@ -437,53 +630,10 @@ namespace Confluence2AzureDevOps.Processor
                 }
             }
         }
+        
+        #endregion
 
-        private List<ConfluencePageRef> GetPageInfoFromHtmlLinkElement(HtmlNodeCollection nodes)
-        {
-            var result = new List<ConfluencePageRef>();
-
-            ConfluencePageRef newNode = null;
-            
-            foreach (HtmlNode child in nodes)
-            {
-                if (child.Name == "a")
-                {
-                    LinkElementInfo linkRef = HtmlUtils.GetLinkInfo(child);
-
-                    if (linkRef != null)
-                    {
-                        if (string.IsNullOrEmpty(linkRef.LinkCaption))
-                        {
-                            linkRef.LinkCaption = $"{CAPTION_NOT_SET}_{_captionNotSetCount}";
-                            _captionNotSetCount++;
-                        }
-                        
-                        newNode = new ConfluencePageRef()
-                        {
-                            HtmlTitle = linkRef.LinkCaption,
-                            HtmlLocalFileName = linkRef.LinkHref
-                        };
-                    }
-                    
-                    result.Add(newNode);
-                }
-                else if (child.HasChildNodes)
-                {
-                    List<ConfluencePageRef> childrenNodes = GetPageInfoFromHtmlLinkElement(child.ChildNodes);
-                    
-                    if (newNode != null)
-                    {
-                        newNode.SubPages.AddRange(childrenNodes);
-                    }
-                    else
-                    {
-                        result.AddRange(childrenNodes);
-                    }
-                }
-            }
-
-            return result;
-        }
+        #region - Utils -
 
         private void WriteJsonObject<T>(string fileName, T value)
         {
@@ -491,12 +641,14 @@ namespace Confluence2AzureDevOps.Processor
             
             IoUtils.SaveObjectToFile(jsonFile, value);
 
-            System.Diagnostics.Trace.TraceInformation($"Write file {jsonFile}");
+            Trace.TraceInformation($"Write file {jsonFile}");
         }
         
         private void NotifyProcess(string message)
         {
             ProcessNotifier?.Invoke(message);
         }
+
+        #endregion
     }
 }

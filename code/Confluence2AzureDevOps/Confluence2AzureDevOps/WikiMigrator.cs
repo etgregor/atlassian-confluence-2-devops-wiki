@@ -10,29 +10,41 @@ namespace Confluence2AzureDevOps
     /// </summary>
     public class WikiMigrator
     {
-        private string migrationId;
+        private readonly string _migrationId;
 
-        private string outputConvertionMdFiles;
-        
-        private string outputAttachments;
+        private readonly string _outputConversionMdFiles;
             
         private Html2MdConverter _converter;
         
-        private MigrationConfig _config;
+        private readonly MigrationConfig _config;
         
+        public BmlProcessNotifier ProcessNotifier { get; set; }
+
+        public string OutputDir
+        {
+            get { return _outputConversionMdFiles; }
+        }
+
         public WikiMigrator(MigrationConfig config)
         {
             _config = config;
             
-            migrationId = $"Migration_{DateTime.Now:ddMMyy_HHmm}";
+            _migrationId = $"Migration_{DateTime.Now:ddMMyy_HHmm}";
 
-            outputConvertionMdFiles = Path.Combine(config.LocalConfig.LocalWorkspacePath, $"MD{migrationId}");
+            _outputConversionMdFiles = Path.Combine(config.LocalConfig.LocalWorkspacePath, $"{_migrationId}");
         }
 
         public void StartMigration(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
         {
-            _converter = new Html2MdConverter(_config.LocalConfig.LocalConfluencePath, outputConvertionMdFiles);
+            _converter = new Html2MdConverter(_config.LocalConfig.LocalConfluencePath, _outputConversionMdFiles, _config.ReplazableTitles);
+            _converter.ProcessNotifier = NotifyProcess;
+            
             _converter.ConvertHtmlToMdFiles(confluenceIndexFile, selectorOfIndexControl);
+        }
+        
+        private void NotifyProcess(string message)
+        {
+            ProcessNotifier?.Invoke(message);
         }
     }
 }

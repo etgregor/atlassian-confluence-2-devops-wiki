@@ -82,6 +82,8 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         internal const string HTML_TABLE = "table";
         
         internal const string HTML_SECTION = "section";
+        
+        internal const string HTML_A = "a";
 
         #endregion
     }

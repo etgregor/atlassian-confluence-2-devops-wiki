@@ -6,10 +6,10 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         {
         }
 
-        public LinkElementInfo(string originalHref, string linkCaption, bool isImage = false)
+        public LinkElementInfo(string originalHref, string linkCaption)
         {
-            LinkHref = originalHref;
-            LinkCaption = linkCaption;
+            OriginalRef = originalHref;
+            Caption = linkCaption;
 
             ResourceType = ResourceType.Unknown;
             
@@ -33,15 +33,21 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         /// <summary>
         /// 'href' attribute
         /// </summary>
-        public string LinkHref { get; set; }
+        public string OriginalRef { get; set; }
 
         /// <summary>
         /// Value or caption of resource
         /// </summary>
-        public string LinkCaption { get; set; }
+        public string Caption { get; set; }
         
+        /// <summary>
+        /// Resource type, it depends on location
+        /// </summary>
         public ResourceType ResourceType { get; set; }
 
-        public string NewResourceLocation { get; set; }
+        /// <summary>
+        /// New reference location
+        /// </summary>
+        public string NewRef { get; set; }
     }
 }

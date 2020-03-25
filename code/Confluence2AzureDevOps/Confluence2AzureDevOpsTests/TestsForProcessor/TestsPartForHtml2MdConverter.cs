@@ -47,7 +47,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             
             System.IO.File.Delete($"{_workingDir}/3_ResultWikiMd/1_ NewOrder - Estructura XML.md");
 
-            _converter.PrepareHtmlFile(conf);
+            _converter.ProcessHtmlFile(conf);
         }
 
         private void WriteProcess(string message)
