@@ -554,7 +554,7 @@ namespace Confluence2AzureDevOps.Processor
                                 }
                                 else
                                 {
-                                    NotifyProcess($"WARN: Missing link  '{link.OriginalRef}'");
+                                    NotifyProcess($"WARN: Reference to wiki page not found: '{link.OriginalRef}'");
                                 }
                             
                                 break;
