@@ -491,8 +491,7 @@ namespace Confluence2AzureDevOps.Processor
                         switch (link.ResourceType)
                         {
                             case ResourceType.AttachmentLink:
-
-                                //string tempUrl;
+                                
                                 Uri actualUri;
                             
                                 if (!link.OriginalRef.StartsWith("http"))
@@ -506,14 +505,29 @@ namespace Confluence2AzureDevOps.Processor
 
                                 string absolutePath = actualUri.AbsolutePath;
 
+                                int queryStringStart = absolutePath.IndexOf("?", StringComparison.InvariantCulture);
+                                
+                                if ( queryStringStart > 0)
+                                {
+                                    absolutePath = absolutePath.Substring(0, queryStringStart);
+                                }
+                                
                                 var elements = new List<string>();
                                 elements.Add(_htmlSourceFolder);
                                 elements.AddRange(absolutePath.Split('/'));
+                                
                                 string originalFilePath = Path.Combine(elements.ToArray());
                                 
-                                string fileName = Path.GetFileName(link.OriginalRef);
+                                string fileName = Path.GetFileName(absolutePath);
+                                
+                                // queryStringStart = fileName.IndexOf("?", StringComparison.InvariantCulture);
+                                //
+                                // if ( queryStringStart > 0)
+                                // {
+                                //     fileName = fileName.Substring(0, queryStringStart);
+                                // }
 
-                                string finalPath = Path.Combine(".attachments", fileName);
+                                string finalPath = Path.Combine(WIKI_RESULT_ATTACHMENT_FILES, fileName);
                             
                                 string finalAttachmentPath = Path.Combine(_resultDir, finalPath);
 
