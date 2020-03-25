@@ -34,8 +34,8 @@ namespace Confluence2AzureDevOpsTests
             try
             {    
                 _wikiMigrator.StartMigration();
-                
-                Assert.Pass();
+
+                Assert.IsTrue(true);
             }
             catch (Exception e)
             {

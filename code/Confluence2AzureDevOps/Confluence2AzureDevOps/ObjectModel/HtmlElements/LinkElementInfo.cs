@@ -19,6 +19,10 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
                 {
                     ResourceType = ResourceType.AttachmentLink;
                 }
+                else if (originalHref.StartsWith("images"))
+                {
+                    ResourceType = ResourceType.AttachmentLink;
+                }
                 else if (originalHref.StartsWith("http") || originalHref.StartsWith("https"))
                 {
                     ResourceType = ResourceType.ExternalLink;

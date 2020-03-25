@@ -318,7 +318,7 @@ namespace Confluence2AzureDevOps.Processor
 
             if (htmlPage != null)
             {
-                NotifyProcess($"        ======== Start processing: {confluencePageRef.HtmlLocalFileName} ========");
+                NotifyProcess($"========> Start processing: {confluencePageRef.HtmlLocalFileName}");
                 
                 ApplyCustomConversions(htmlPage.DocumentNode.ChildNodes);
 
@@ -337,8 +337,6 @@ namespace Confluence2AzureDevOps.Processor
                 htmlContent = ReplaceLinks(confluencePageRef, htmlContent);
                 
                 ConvertHtml2Markdown2(confluencePageRef, htmlContent.ToString());
-                
-                NotifyProcess($"        ======== End processing: {confluencePageRef.HtmlLocalFileName} ========");
             }
             
             foreach (ConfluencePageRef subPage in confluencePageRef.SubPages)
@@ -370,7 +368,7 @@ namespace Confluence2AzureDevOps.Processor
                 {
                     if (!string.IsNullOrEmpty(readingErrors))
                     {
-                        NotifyProcess($"WARN: Read file with errors. {htmlLocalFileName}: {readingErrors}");
+                        NotifyProcess($"WARN: HTML errors: {readingErrors}");
                     }
                 }
                 else
@@ -380,7 +378,7 @@ namespace Confluence2AzureDevOps.Processor
             }
             else
             {
-                NotifyProcess($"WARN: file not exists. {htmlLocalFileName}");
+                NotifyProcess($"WARN: File exists.");
             }
 
             return file;
@@ -519,13 +517,16 @@ namespace Confluence2AzureDevOps.Processor
                             
                                 string finalAttachmentPath = Path.Combine(_resultDir, finalPath);
 
-                                if (System.IO.File.Exists(originalFilePath))
+                                if (File.Exists(originalFilePath))
                                 {
-                                    File.Copy(originalFilePath, finalAttachmentPath, true);    
+                                    if (!File.Exists(finalAttachmentPath))
+                                    {
+                                        File.Copy(originalFilePath, finalAttachmentPath);    
+                                    }
                                 }
                                 else
                                 {
-                                    NotifyProcess($"WARN: file not exists: {originalFilePath}");
+                                    NotifyProcess($"WARN: linked resource not found '{originalFilePath}'");
                                 }
                                 
                                 originalText.Replace(link.OriginalRef, finalPath);
@@ -533,8 +534,7 @@ namespace Confluence2AzureDevOps.Processor
                                 link.NewRef = finalPath;
                                 break;
                             case ResourceType.PageExistsOnWiki:
-                                //string actualLink = Path.GetFileName(link.OriginalRef);
-
+                                
                                 ConfluencePageRef pageInfo = null;
                                 
                                 if (string.Equals(_wikiMenu.HtmlLocalFileName, link.OriginalRef))
