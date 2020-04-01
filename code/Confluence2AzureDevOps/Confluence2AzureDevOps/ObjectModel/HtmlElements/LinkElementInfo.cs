@@ -1,6 +1,6 @@
 namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
 {
-    internal class LinkElementInfo
+    public class LinkElementInfo
     {
         public LinkElementInfo()
         {
@@ -53,5 +53,12 @@ namespace Confluence2AzureDevOps.ObjectModel.HtmlElements
         /// New reference location
         /// </summary>
         public string NewRef { get; set; }
+
+        public string MigrationMessage { get; private set; }
+
+        public void SetMigrationMessage(string message)
+        {
+            this.MigrationMessage = message;
+        }
     }
 }

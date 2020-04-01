@@ -7,7 +7,7 @@ namespace Confluence2AzureDevOps.ObjectModel.WikiPages
     /// Defines a page in a wiki.
     /// See more <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/get%20page?view=azure-devops-rest-5.1#wikipage">here</see>.
     /// </summary>
-    public abstract class DtWikiPage
+    public class DtWikiPage
     {
         /// <summary>
         /// Content of the wiki page.

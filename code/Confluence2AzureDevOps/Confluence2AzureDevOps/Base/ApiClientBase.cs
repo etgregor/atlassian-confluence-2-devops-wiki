@@ -332,7 +332,26 @@ namespace Confluence2AzureDevOps.Base
                  
                  if (exceptionResult == null)
                  {
-                     exceptionResult = new ApiException(UNKNOWN_API_EXCEPTION);
+                     ApiErrorResult errorResult = null;
+                     
+                     try
+                     {
+                         errorResult = JsonConvert.DeserializeObject<ApiErrorResult>(responseContent);
+                     }
+                     catch
+                     {
+                         errorResult = null;
+                     }
+
+                     if (errorResult != null)
+                     {
+                         exceptionResult = new ApiException("Api call error", errorResult);
+                     }
+                     else
+                     {
+                         exceptionResult = new ApiException(UNKNOWN_API_EXCEPTION);    
+                     }
+                     
                      exceptionResult.Data.Add("Service-HttpStatusCode", statusCode.ToString());
                      exceptionResult.Data.Add("Service-ResponseContent", responseContent);
                  }

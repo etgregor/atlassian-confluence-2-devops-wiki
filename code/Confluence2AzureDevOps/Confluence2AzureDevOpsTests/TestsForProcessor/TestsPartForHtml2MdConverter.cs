@@ -35,15 +35,14 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
         [Test]
         public void TestsForPrepareHtmlFile()
         {
-            ConfluencePageRef conf = new ConfluencePageRef()
-            {
-                HtmlTitle = "1. NewOrder - Estructura XML",
-                HtmlLocalFileName = "1.-NewOrder---Estructura-XML_29261850.html",
-                MarkdownLocalFilename = "1_ NewOrder - Estructura XML.md",
-                PageTitleAtAzureDevOps = "1_ NewOrder - Estructura XML",
-                PagePathAtAzureDevOps =
-                    "/Home/Documentacion Tecnica/Articulos tecnicos/Funcionamiento/Servicios Formiik/Servicios Web que Expone Formiik (Backend)/BackEnd_svc/Administrar Ordenes/1. NewOrder - Estructura XML",
-            };
+            ConfluencePageRef conf = new ConfluencePageRef(
+                "1. NewOrder - Estructura XML",
+                "1.-NewOrder---Estructura-XML_29261850.html");
+            
+            conf.SetAzurePageInfo(
+                "1_ NewOrder - Estructura XML.md", 
+                "1_ NewOrder - Estructura XML",
+                "/Home/Documentacion Tecnica/Articulos tecnicos/Funcionamiento/Servicios Formiik/Servicios Web que Expone Formiik (Backend)/BackEnd_svc/Administrar Ordenes/1. NewOrder - Estructura XML");
             
             System.IO.File.Delete($"{_workingDir}/3_ResultWikiMd/1_ NewOrder - Estructura XML.md");
 

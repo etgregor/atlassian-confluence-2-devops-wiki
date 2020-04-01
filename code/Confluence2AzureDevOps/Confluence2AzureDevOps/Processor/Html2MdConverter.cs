@@ -42,12 +42,7 @@ namespace Confluence2AzureDevOps.Processor
         /// Folder contains wiki md result
         /// </summary>
         private const string WIKI_RESULT_ATTACHMENT_FILES = ".attachments";
-        
-        /// <summary>
-        /// Max length for path at azure dev ops, <see cref="https://docs.microsoft.com/en-us/azure/devops/project/wiki/wiki-file-structure?view=azure-devops"/> 
-        /// </summary>
-        private const int AZURE_DEV_OPS_MAX_PATH_LENGTH = 235;
-        
+
         /// <summary>
         /// Folder with Html pages that exported from Confluence Cloud
         /// </summary>
@@ -70,7 +65,12 @@ namespace Confluence2AzureDevOps.Processor
         private int _internalRefCountNumber;
  
         public BmlProcessNotifier ProcessNotifier { get; set; }
-        
+
+        public Dictionary<string, List<LinkElementInfo>> AttachmentsFiles
+        {
+            get { return _linkReferences; }
+        }
+
         private ConfluencePageRef _wikiMenu;
 
         private readonly Dictionary<string, List<LinkElementInfo>> _linkReferences;
@@ -133,7 +133,7 @@ namespace Confluence2AzureDevOps.Processor
             
             CreateOutputDirs();
             
-            _wikiMenu = ReadConfluenceIndexOfPages(selectorOfIndexControl);
+            _wikiMenu = ReadConfluenceMapSite(selectorOfIndexControl);
 
             BuildRoutePathTree(string.Empty, _wikiMenu);
             
@@ -174,7 +174,7 @@ namespace Confluence2AzureDevOps.Processor
        
         #region - ExtractInitialIndex -
 
-        private ConfluencePageRef ReadConfluenceIndexOfPages(string ulElementSelector)
+        private ConfluencePageRef ReadConfluenceMapSite(string ulElementSelector)
         {
             ConfluencePageRef wikiMainPage = null;
 
@@ -193,41 +193,27 @@ namespace Confluence2AzureDevOps.Processor
             List<ConfluencePageRef> nodes = GetPageInfoFromHtmlLinkElement(bodyNode.ChildNodes);
 
             string mainFile = Path.GetFileName(_indexFileFullPath);
-            
-            wikiMainPage = new ConfluencePageRef();
-            wikiMainPage.HtmlTitle = "Home";
-            wikiMainPage.HtmlLocalFileName = mainFile;
+
+            wikiMainPage = new ConfluencePageRef("Home", mainFile);
             wikiMainPage.SubPages.AddRange(nodes);
-            //wikiMainPage = nodes.FirstOrDefault();
-            //_replazableTitles
+
             if (wikiMainPage == null)
             {
                 throw new GenericC2AException($"Can't get the confluence page index from: {_indexFileFullPath}");
             }
 
-            //wikiMainPage.HtmlTitle = "Home";
-            
             return wikiMainPage;
         }
-        
+
         private void BuildRoutePathTree(string nodePath, ConfluencePageRef wikiPageInfo)
         {
             string fileTitleDevOps = GetPageTitleAtForAzureDevOps(wikiPageInfo);
 
             if (!string.IsNullOrEmpty(fileTitleDevOps))
             {
-                wikiPageInfo.PageTitleAtAzureDevOps = fileTitleDevOps;
-
                 var htmlFileName = System.IO.Path.GetFileNameWithoutExtension(wikiPageInfo.HtmlLocalFileName);
-                
-                wikiPageInfo.MarkdownLocalFilename = $"{htmlFileName}.md";
-                
-                wikiPageInfo.PagePathAtAzureDevOps = $"{nodePath}/{wikiPageInfo.HtmlTitle}";
-
-                if (wikiPageInfo.PagePathAtAzureDevOps.Length > AZURE_DEV_OPS_MAX_PATH_LENGTH)
-                {
-                    NotifyProcess($"WARN: Too long path ({AZURE_DEV_OPS_MAX_PATH_LENGTH}): {wikiPageInfo.PagePathAtAzureDevOps}");
-                }
+             
+                wikiPageInfo.SetAzurePageInfo($"{htmlFileName}.md", fileTitleDevOps, $"{nodePath}/{fileTitleDevOps}");
             }
             else
             {
@@ -280,12 +266,8 @@ namespace Confluence2AzureDevOps.Processor
                         {
                             linkRef.Caption = newCaption;
                         }
-                        
-                        newNode = new ConfluencePageRef()
-                        {
-                            HtmlTitle = linkRef.Caption,
-                            HtmlLocalFileName = linkRef.OriginalRef
-                        };
+
+                        newNode = new ConfluencePageRef(linkRef.Caption, linkRef.OriginalRef);
                     }
                     
                     result.Add(newNode);
@@ -477,11 +459,16 @@ namespace Confluence2AzureDevOps.Processor
 
         private StringBuilder ReplaceLinks(ConfluencePageRef pageRef, StringBuilder originalText)
         {
-            try
+            if (this._linkReferences.TryGetValue(pageRef.HtmlLocalFileName, out List<LinkElementInfo> links))
             {
-                if (this._linkReferences.TryGetValue(pageRef.HtmlLocalFileName, out List<LinkElementInfo> links))
+                foreach (LinkElementInfo link in links)
                 {
-                    foreach (LinkElementInfo link in links)
+                    if (string.Equals(link.OriginalRef, "#"))
+                    {
+                        continue;
+                    }
+
+                    try
                     {
                         if (string.IsNullOrEmpty(link.OriginalRef))
                         {
@@ -491,77 +478,22 @@ namespace Confluence2AzureDevOps.Processor
                         switch (link.ResourceType)
                         {
                             case ResourceType.AttachmentLink:
-                                
-                                Uri actualUri;
-                            
-                                if (!link.OriginalRef.StartsWith("http"))
+                                link.NewRef = this.GetAttachmentUrl(link.OriginalRef);
+
+                                if (string.IsNullOrEmpty(link.NewRef))
                                 {
-                                    actualUri = new Uri($"http://localhost/{link.OriginalRef}");
-                                }
-                                else
-                                {
-                                    actualUri = new Uri(link.OriginalRef);
+                                    NotifyProcess($"WARN: attachment resource not found '{link.OriginalRef}'");
+                                    link.NewRef = "#";
                                 }
 
-                                string absolutePath = actualUri.AbsolutePath;
+                                originalText.Replace(link.OriginalRef, link.NewRef);
 
-                                int queryStringStart = absolutePath.IndexOf("?", StringComparison.InvariantCulture);
-                                
-                                if ( queryStringStart > 0)
-                                {
-                                    absolutePath = absolutePath.Substring(0, queryStringStart);
-                                }
-                                
-                                var elements = new List<string>();
-                                elements.Add(_htmlSourceFolder);
-                                elements.AddRange(absolutePath.Split('/'));
-                                
-                                string originalFilePath = Path.Combine(elements.ToArray());
-                                
-                                string fileName = Path.GetFileName(absolutePath);
-                                
-                                // queryStringStart = fileName.IndexOf("?", StringComparison.InvariantCulture);
-                                //
-                                // if ( queryStringStart > 0)
-                                // {
-                                //     fileName = fileName.Substring(0, queryStringStart);
-                                // }
-
-                                string finalPath = Path.Combine(WIKI_RESULT_ATTACHMENT_FILES, fileName);
-                            
-                                string finalAttachmentPath = Path.Combine(_resultDir, finalPath);
-
-                                if (File.Exists(originalFilePath))
-                                {
-                                    if (!File.Exists(finalAttachmentPath))
-                                    {
-                                        File.Copy(originalFilePath, finalAttachmentPath);    
-                                    }
-                                }
-                                else
-                                {
-                                    NotifyProcess($"WARN: linked resource not found '{originalFilePath}'");
-                                }
-                                
-                                originalText.Replace(link.OriginalRef, finalPath);
-
-                                link.NewRef = finalPath;
                                 break;
                             case ResourceType.PageExistsOnWiki:
-                                
-                                ConfluencePageRef pageInfo = null;
-                                
-                                if (string.Equals(_wikiMenu.HtmlLocalFileName, link.OriginalRef))
-                                {    
-                                    pageInfo = _wikiMenu;
-                                }
 
-                                if (pageInfo == null)
-                                {
-                                    pageInfo = GetPageInfoFromMenu(_wikiMenu.SubPages, link.OriginalRef);
-                                }
-                            
-                                if(pageInfo != null)
+                                ConfluencePageRef pageInfo = GetPageRefFromMenu(link.OriginalRef);
+
+                                if (pageInfo != null)
                                 {
                                     originalText.Replace(link.OriginalRef, pageInfo.PagePathAtAzureDevOps);
                                     link.NewRef = pageInfo.PagePathAtAzureDevOps;
@@ -569,19 +501,110 @@ namespace Confluence2AzureDevOps.Processor
                                 else
                                 {
                                     NotifyProcess($"WARN: Reference to wiki page not found: '{link.OriginalRef}'");
+                                    link.NewRef = "#";
                                 }
-                            
+                                
                                 break;
                         }
                     }
+                    catch (Exception e)
+                    {
+                        NotifyProcess($"WARN: Can't replace links: '{link.OriginalRef}', {e.Message}");
+                    }
                 }
             }
-            catch (Exception e)
-            {
-                throw new GenericC2AException($"Can't replace links into", e);
-            }
+
 
             return originalText;
+        }
+
+        private string GetAttachmentUrl(string actualRef)
+        {
+            string newLocation;
+
+            Uri actualUri;
+
+            if (!actualRef.StartsWith("http"))
+            {
+                actualUri = new Uri($"http://localhost/{actualRef}");
+            }
+            else
+            {
+                actualUri = new Uri(actualRef);
+            }
+
+            string absolutePath = actualUri.AbsolutePath;
+
+            int queryStringStart = absolutePath.IndexOf("?", StringComparison.InvariantCulture);
+
+            if (queryStringStart > 0)
+            {
+                absolutePath = absolutePath.Substring(0, queryStringStart);
+            }
+
+            var elements = new List<string>();
+            elements.Add(_htmlSourceFolder);
+            elements.AddRange(absolutePath.Split('/'));
+
+            string originalFilePath = Path.Combine(elements.ToArray());
+
+            string fileName = Path.GetFileName(absolutePath);
+
+            newLocation = Path.Combine(WIKI_RESULT_ATTACHMENT_FILES, fileName);
+
+            string finalAttachmentPath = Path.Combine(_resultDir, newLocation);
+
+            if (File.Exists(originalFilePath))
+            {
+                if (!File.Exists(finalAttachmentPath))
+                {
+                    File.Copy(originalFilePath, finalAttachmentPath);
+                }
+            }
+            else
+            {
+                newLocation = string.Empty;
+            }
+
+            return newLocation;
+        }
+
+        private ConfluencePageRef GetPageRefFromMenu(string actualRef)
+        {
+            ConfluencePageRef pageInfo = null;
+
+            if (string.Equals(_wikiMenu.HtmlLocalFileName, actualRef))
+            {
+                pageInfo = _wikiMenu;
+            }
+
+            if (pageInfo == null)
+            {
+                pageInfo = GetPageInfoFromMenu(_wikiMenu.SubPages, actualRef);
+            }
+
+            // if (pageInfo == null)
+            // {
+            //     string posibleFileExists = Path.Combine(_htmlSourceFolder, actualRef);
+            //
+            //     if (File.Exists(posibleFileExists))
+            //     {
+            //         bool pageExists;
+            //         var notInMenu = _wikiMenu.SubPages.FirstOrDefault(p => p.HtmlTitle == "NotInMenu");
+            //
+            //         pageExists = notInMenu != null;
+            //
+            //         if (!pageExists)
+            //         {
+            //             notInMenu = new ConfluencePageRef("Not ref", actualRef);
+            //         }
+            //
+            //         //ConvertHtml2Markdown2();
+            //         //ConfluencePageRef 
+            //     }
+            // }
+
+            return pageInfo;
         }
         
         private ConfluencePageRef GetPageInfoFromMenu(List<ConfluencePageRef> subPages, string searchedPage)

@@ -19,5 +19,9 @@
       <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
       <PackageReference Include="ReverseMarkdown" Version="3.10.0" />
     </ItemGroup>
-
+    <ItemGroup>
+      <None Include="Resources\NotInMenu.html">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 </Project>

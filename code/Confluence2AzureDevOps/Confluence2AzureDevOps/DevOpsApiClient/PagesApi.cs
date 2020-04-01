@@ -49,6 +49,30 @@ namespace Confluence2AzureDevOps.DevOpsApiClient
 
             return page;
         }
+        
+        /// <summary>
+        /// Gets metadata or content of the wiki page for the provided path. Content negotiation is done based on the Accept header sent in the request.
+        /// <see cref="https://docs.microsoft.com/en-us/rest/api/azure/devops/wiki/pages/get%20page?view=azure-devops-rest-5.1"/>
+        /// </summary>
+        /// <returns>Returns <see cref="DtWikiPage"/></returns>
+        /// <exception cref="UnautorizeApiException">Security exception. Its raise when api return an HTTP CODE 203</exception>
+        /// <exception cref="ApiInvalidInputDataException">When input data is wrong. Its raise when api return an HTTP CODE 400</exception>
+        /// <exception cref="ApiException">Its raise when api return an HTTP CODE is not expected.</exception>
+        /// <exception cref="CallApiException">Component error. Raise when call and api. .i. e.: network exception.</exception>
+        public async Task<DtWikiPage> GetPage(string path)
+        {
+            var queryString = new Dictionary<string, string>();
+
+            queryString.Add("path", path);
+            queryString.Add("recursionLevel", "OneLevel");
+
+            DtWikiPage page = await ApiGet<DtWikiPage>(
+                UrlBase,
+                queryString: queryString,
+                httpClientConfig: HttpClientConfig);
+
+            return page;
+        }
 
         /// <summary>
         /// Creates or edits a wiki page.

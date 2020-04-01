@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Confluence2AzureDevOps.ObjectModel;
+using Confluence2AzureDevOps.ObjectModel.HtmlElements;
 using Confluence2AzureDevOps.Processor;
 
 namespace Confluence2AzureDevOps
@@ -17,6 +20,8 @@ namespace Confluence2AzureDevOps
         private Html2MdConverter _converter;
         
         private readonly MigrationConfig _config;
+
+        private DevOpsWikiUploader _wikiUploader;
         
         public BmlProcessNotifier ProcessNotifier { get; set; }
 
@@ -31,15 +36,22 @@ namespace Confluence2AzureDevOps
             
             _migrationId = $"Migration_{DateTime.Now:ddMMyy_HHmm}";
 
-            _outputConversionMdFiles = Path.Combine(config.LocalConfig.LocalWorkspacePath, $"{_migrationId}");
+            _outputConversionMdFiles = Path.Combine(_config.LocalConfig.LocalWorkspacePath, $"{_migrationId}");
         }
 
-        public void StartMigration(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
+        public async Task<bool> MigrateWiki(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
         {
             _converter = new Html2MdConverter(_config.LocalConfig.LocalConfluencePath, _outputConversionMdFiles, _config.ReplazableTitles);
             _converter.ProcessNotifier = NotifyProcess;
             
-            _converter.ConvertHtmlToMdFiles(confluenceIndexFile, selectorOfIndexControl);
+            ConfluencePageRef mapSite = _converter.ConvertHtmlToMdFiles(confluenceIndexFile, selectorOfIndexControl);
+            Dictionary<string, List<LinkElementInfo>> attachments = _converter.AttachmentsFiles;
+            
+            _wikiUploader = new DevOpsWikiUploader(_config, _outputConversionMdFiles);
+            _wikiUploader.ProcessNotifier = NotifyProcess;
+            bool success = await _wikiUploader.UploadWiki(mapSite, attachments);
+            
+            return success;
         }
         
         private void NotifyProcess(string message)
