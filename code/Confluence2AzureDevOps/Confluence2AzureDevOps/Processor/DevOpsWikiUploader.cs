@@ -56,7 +56,7 @@ namespace Confluence2AzureDevOps.Processor
         private async Task UploadPage(ConfluencePageRef pageToUpload)
         {
             NotifyProcess($"---->> Uploading: {pageToUpload.HtmlLocalFileName}");
-            NotifyProcess($"{pageToUpload.PagePathAtAzureDevOps} => {pageToUpload.PageTitleAtAzureDevOps}");
+            NotifyProcess($"{pageToUpload.PagePathAtAzureDevOps}");
 
             var page = new PageWikiCreateOptions();
             page.Comment = string.Format($"Page created by Gregorio Marciano using Confluence2AzureDevOps");

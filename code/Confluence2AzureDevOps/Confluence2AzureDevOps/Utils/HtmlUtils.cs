@@ -310,6 +310,10 @@ namespace Confluence2AzureDevOps.Utils
 
             title = invalidChars.Replace(title, " ");
             title = title.Replace(".", "_");
+            title = title.Replace("-", "_");
+            title = title.Replace("/", "_");
+            
+            title = title.Replace("#", "Sharp");
 
             title = RemoveMultiplesSpaces(title);
 

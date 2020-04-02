@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,6 +48,7 @@ namespace Confluence2AzureDevOpsTests
             {
                 if (e1.Detail != null)
                 {
+                    _log.AppendLine("ERR1");
                     _log.AppendLine(e1.Message);
                     _log.AppendLine(e1.Detail.Message);
                     
@@ -54,6 +56,7 @@ namespace Confluence2AzureDevOpsTests
                 }
                 else
                 {
+                    _log.AppendLine("ERR2");
                     _log.AppendLine(e1.Message);
                     _log.AppendLine(e1.StackTrace);
                     
@@ -62,8 +65,14 @@ namespace Confluence2AzureDevOpsTests
             }
             catch (Exception e)
             {   
+                _log.AppendLine("ERR3");
                 _log.AppendLine(e.Message);
                 _log.AppendLine(e.StackTrace);
+
+                foreach (DictionaryEntry val in e.Data)
+                {
+                    _log.Append($"{val.Key} => {val.Value}");
+                }
                 
                 Assert.Fail(e.Message + "" + e.StackTrace + e.Data.Values);
             }
@@ -85,6 +94,7 @@ namespace Confluence2AzureDevOpsTests
 
         private void WriteProcess(string message)
         {
+            TestContext.Out.WriteLine(message);
             _log.AppendLine(message);
         }
     }
