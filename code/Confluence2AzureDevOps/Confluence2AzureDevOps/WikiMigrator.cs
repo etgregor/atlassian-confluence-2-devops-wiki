@@ -39,12 +39,15 @@ namespace Confluence2AzureDevOps
             _outputConversionMdFiles = Path.Combine(_config.LocalConfig.LocalWorkspacePath, $"{_migrationId}");
         }
 
-        public async Task<bool> MigrateWiki(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
+        public async Task<bool> MigrateWiki(string rootPageNameForWiki = "Home", string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
         {
             _converter = new Html2MdConverter(_config.LocalConfig.LocalConfluencePath, _outputConversionMdFiles, _config.ReplazableTitles);
             _converter.ProcessNotifier = NotifyProcess;
             
-            ConfluencePageRef mapSite = _converter.ConvertHtmlToMdFiles(confluenceIndexFile, selectorOfIndexControl);
+            ConfluencePageRef mapSite = _converter.ConvertHtmlToMdFiles(
+                defaultPage:rootPageNameForWiki, 
+                confluenceIndexFile: confluenceIndexFile, 
+                selectorOfIndexControl: selectorOfIndexControl);
             Dictionary<string, List<LinkElementInfo>> attachments = _converter.AttachmentsFiles;
             
             _wikiUploader = new DevOpsWikiUploader(_config, _outputConversionMdFiles);

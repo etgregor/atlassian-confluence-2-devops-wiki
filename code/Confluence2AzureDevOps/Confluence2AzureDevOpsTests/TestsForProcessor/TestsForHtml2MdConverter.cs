@@ -40,8 +40,8 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
         public void ConvertHtml2MdFilesTests()
         {
             try
-            {    
-                ConfluencePageRef siteMapIndex =  _converter.ConvertHtmlToMdFiles();
+            {
+                ConfluencePageRef siteMapIndex = _converter.ConvertHtmlToMdFiles(defaultPage: "MigrationTest");
                 Assert.IsNotNull(siteMapIndex);
 
                 string logPath = Path.Combine(_workingDir, "Log.txt");

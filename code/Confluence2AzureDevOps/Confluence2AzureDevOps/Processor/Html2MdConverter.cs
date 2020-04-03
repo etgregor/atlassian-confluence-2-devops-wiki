@@ -117,15 +117,16 @@ namespace Confluence2AzureDevOps.Processor
                 _replazableTitles = new Dictionary<string, string>();
             }
         }
-        
+
         /// <summary>
         /// Init process migration bases on <see cref="confluenceIndexFile"/>, <see cref="selectorOfIndexControl"/>,
         /// looking for series: ul>a>ul>, and take "a" html element value and 'href' attribute 
         /// </summary>
+        /// <param name="defaultPage">Default parent name at DevOps wiki</param>
         /// <param name="confluenceIndexFile">File that contain the index of site of confluence exported wiki site</param>
         /// <param name="selectorOfIndexControl">xpath selector of UL menu element at index.html file</param>
         /// <exception cref="GenericC2AException">When something is wrong</exception>
-        public ConfluencePageRef ConvertHtmlToMdFiles(string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
+        public ConfluencePageRef ConvertHtmlToMdFiles(string defaultPage = "Home", string confluenceIndexFile = "index.html", string selectorOfIndexControl = "//*[@id='content']/div[2]/ul")
         {
             Guard.PreventDirectoryNotExistt(_htmlSourceFolder);
 
@@ -133,7 +134,7 @@ namespace Confluence2AzureDevOps.Processor
             
             CreateOutputDirs();
             
-            _wikiMenu = ReadConfluenceMapSite(selectorOfIndexControl);
+            _wikiMenu = ReadConfluenceMapSite(defaultPage, selectorOfIndexControl);
 
             BuildRoutePathTree(string.Empty, _wikiMenu);
             
@@ -174,7 +175,7 @@ namespace Confluence2AzureDevOps.Processor
        
         #region - ExtractInitialIndex -
 
-        private ConfluencePageRef ReadConfluenceMapSite(string ulElementSelector)
+        private ConfluencePageRef ReadConfluenceMapSite(string defaultPageName, string ulElementSelector)
         {
             ConfluencePageRef wikiMainPage = null;
 
@@ -194,7 +195,7 @@ namespace Confluence2AzureDevOps.Processor
 
             string mainFile = Path.GetFileName(_indexFileFullPath);
 
-            wikiMainPage = new ConfluencePageRef("Home", mainFile);
+            wikiMainPage = new ConfluencePageRef(defaultPageName, mainFile);
             wikiMainPage.SubPages.AddRange(nodes);
 
             if (wikiMainPage == null)
@@ -261,8 +262,9 @@ namespace Confluence2AzureDevOps.Processor
                             linkRef.Caption = $"{CAPTION_NOT_SET}_{_captionNotSetCount}";
                             _captionNotSetCount++;
                         }
-
-                        if (_replazableTitles.TryGetValue(linkRef.Caption, out string newCaption))
+                        string pageTitle = HtmlUtils.ConvertToValidWikiFileName(linkRef.Caption);
+                        
+                        if (_replazableTitles.TryGetValue(pageTitle, out string newCaption))
                         {
                             linkRef.Caption = newCaption;
                         }
