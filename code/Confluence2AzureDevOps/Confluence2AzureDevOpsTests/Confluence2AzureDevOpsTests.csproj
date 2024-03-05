@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="nunit" Version="3.11.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Resources\ExampleFile.md">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\diagram example 123.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Confluence2AzureDevOps\Confluence2AzureDevOps.csproj" />
+    </ItemGroup>
+
+</Project>

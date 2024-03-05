@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Confluence2AzureDevOps", "Confluence2AzureDevOps\Confluence2AzureDevOps.csproj", "{C563BDAC-7AFD-4DFA-A615-6D844D43D7D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Confluence2AzureDevOpsTests", "Confluence2AzureDevOpsTests\Confluence2AzureDevOpsTests.csproj", "{AE4DD9C4-E279-4E52-8D80-4EAF01DAFF08}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C563BDAC-7AFD-4DFA-A615-6D844D43D7D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C563BDAC-7AFD-4DFA-A615-6D844D43D7D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C563BDAC-7AFD-4DFA-A615-6D844D43D7D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C563BDAC-7AFD-4DFA-A615-6D844D43D7D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE4DD9C4-E279-4E52-8D80-4EAF01DAFF08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE4DD9C4-E279-4E52-8D80-4EAF01DAFF08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE4DD9C4-E279-4E52-8D80-4EAF01DAFF08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE4DD9C4-E279-4E52-8D80-4EAF01DAFF08}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
