@@ -1,4 +1,4 @@
-# Migration tool from Atlassian To Microsoft Azure DevOps
+# Migration tool from Confluence Atlassian To Microsoft Azure DevOps Wiki
 
 - Wiki migration
     - Migrate wiki from [Confluence Cloud HTML format](https://confluence.atlassian.com/confcloud/export-content-to-word-pdf-html-and-xml-724764824.html) to [Microsoft Azure DevOps Wiki](https://azure.microsoft.com/en-us/services/devops/wiki/)
