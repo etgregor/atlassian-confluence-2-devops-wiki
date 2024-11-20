@@ -42,7 +42,7 @@ namespace Confluence2AzureDevOpsTests.TestsForProcessor
             conf.SetAzurePageInfo(
                 "1_ NewOrder - Estructura XML.md", 
                 "1_ NewOrder - Estructura XML",
-                "/Home/Documentacion Tecnica/Articulos tecnicos/Funcionamiento/Servicios Formiik/Servicios Web que Expone Formiik (Backend)/BackEnd_svc/Administrar Ordenes/1. NewOrder - Estructura XML");
+                "/Home/Documentacion Tecnica/Articulos tecnicos/Funcionamiento/Servicios/Servicios Web que Expone (Backend)/BackEnd_svc/Administrar Ordenes/1. NewOrder - Estructura XML");
             
             System.IO.File.Delete($"{_workingDir}/3_ResultWikiMd/1_ NewOrder - Estructura XML.md");
 
