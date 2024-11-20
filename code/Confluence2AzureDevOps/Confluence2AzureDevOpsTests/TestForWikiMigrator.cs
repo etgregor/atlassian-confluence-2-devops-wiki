@@ -36,7 +36,7 @@ namespace Confluence2AzureDevOpsTests
         {
             try
             {
-                bool success = await _wikiMigrator.MigrateWiki(rootPageNameForWiki : "FormiikDoc");
+                bool success = await _wikiMigrator.MigrateWiki(rootPageNameForWiki : "GenericDoc");
 
                 Assert.IsTrue(success);
             }
